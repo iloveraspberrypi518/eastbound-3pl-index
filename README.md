@@ -13,7 +13,7 @@ A free tool for retailers who import goods into the US East Coast. It answers tw
 
 ## What it does today
 
-The site has five tabs: **Route planner**, **Mode advisor**, **3PL index**, **Ports**, and **About & sources**. Each tab has its own link, for example `.../port-index/#advisor`.
+The site has six tabs: **Route planner**, **Mode advisor**, **Emissions**, **3PL index**, **Ports**, and **About & sources**. Each tab has its own link, for example `.../port-index/#advisor`.
 
 ### Shipment journey
 Pick a factory region (Shanghai, Ho Chi Minh City or Mumbai), a 3PL, and a final stop. The final stop can be a showroom or studio, with the option to skip the 3PL entirely. The planner compares every path and highlights the best route plus two alternatives:
@@ -42,6 +42,15 @@ Should a shipment fly or sail, and in what kind of container? Pick a sector, shi
 - compliance reminders for each sector, such as FDA Prior Notice, ITAR/EAR, the Cargo Preference Act, and dangerous-goods rules
 
 Rates are illustrative and editable. Current-event scenarios scale them up or down.
+
+### Emissions
+Which route puts the least carbon in the air? Every route option is scored in kg CO₂e per tonne, door to door. The score is distance on each leg (measured along real sea lanes) × GLEC Framework default emission factors: ship 14 g, air 608 g and truck 87 g CO₂e per tonne-km. The tab shows:
+- a speed-vs-emissions chart with the best trade-offs highlighted
+- the CO₂ cost of the Red Sea diversion (Cape vs. Suez) on your lane
+- your shipment's footprint, with an optional carbon price and a passenger-car comparison
+- a full table of options, cleanest first
+
+An **Emissions priority** slider in the route planner lets carbon steer the recommended route. The mode advisor also shows the emissions of each recommendation.
 
 ### 3PL index and ports
 - **3PLs:** 14 providers, including DHL Supply Chain, Ryder, GXO, NFI, GEODIS, Kenco, DSV, Saddle Creek, Flexport, ShipBob, ShipMonk, Red Stag and Stord. The index shows warehouse square footage, East Coast hub cities, and nearest port. You can filter by type or by port.
@@ -72,6 +81,12 @@ Sources are listed at the bottom of the page.
 - [ ] Separate crowd groups: cost-focused and speed-focused shippers, and big and small retailers
 - [ ] Splitting a shipment across several routes or ports to spread risk
 - [ ] Cost of delay: missed sell-through windows, stockouts and holding cost
+
+### Sustainability
+- [ ] Vessel- and carrier-specific emission factors (ship size, fuel type, slow steaming)
+- [ ] Low-carbon fuel options (biofuel, LNG, methanol) and their cost premium
+- [ ] Rail options inland, plus intermodal vs. truck comparisons
+- [ ] Emissions reports retailers can download for Scope 3 reporting
 
 ### Product
 - [ ] Shareable links that save a scenario

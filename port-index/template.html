@@ -6,17 +6,17 @@
 :root{
   --ink:#14212b; --muted:#5b6b78; --paper:#f3f5f6; --panel:#ffffff; --line:#d5dde2;
   --accent:#0a6c8c; --alt1:#b7791f; --alt2:#7a5ea8; --bad:#b4372f; --good:#2f7d4f;
-  --sea:#e4edf2; --land:#cfd8dd; --border:#ffffff; --hazard:#b4372f;
+  --leg1:#2a78d6; --leg2:#eb6834; --leg3:#1baf7a; --leg4:#eda100; --sea:#e4edf2; --land:#cfd8dd; --border:#ffffff; --hazard:#b4372f;
   --display:"Archivo",system-ui,sans-serif; --body:"Archivo",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --ink:#e3eaee; --muted:#93a4b0; --paper:#0f171d; --panel:#16212a; --line:#2a3946;
   --accent:#4fb3d4; --alt1:#e0a84a; --alt2:#a990d6; --bad:#e2716a; --good:#6cc08f;
-  --sea:#12202a; --land:#2b3a46; --border:#16212a; --hazard:#e2716a; color-scheme:dark}}
+  --leg1:#3987e5; --leg2:#d95926; --leg3:#199e70; --leg4:#c98500; --sea:#12202a; --land:#2b3a46; --border:#16212a; --hazard:#e2716a; color-scheme:dark}}
 :root[data-theme="dark"]{
   --ink:#e3eaee; --muted:#93a4b0; --paper:#0f171d; --panel:#16212a; --line:#2a3946;
   --accent:#4fb3d4; --alt1:#e0a84a; --alt2:#a990d6; --bad:#e2716a; --good:#6cc08f;
-  --sea:#12202a; --land:#2b3a46; --border:#16212a; --hazard:#e2716a; color-scheme:dark}
+  --leg1:#3987e5; --leg2:#d95926; --leg3:#199e70; --leg4:#c98500; --sea:#12202a; --land:#2b3a46; --border:#16212a; --hazard:#e2716a; color-scheme:dark}
 body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--body);padding:0 16px}
 .wrap{max-width:1120px;margin:0 auto;padding-block:28px 60px;display:grid;gap:36px}
 h1{font:800 28px/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
@@ -82,6 +82,17 @@ input[type=number]{font:14px var(--mono);padding:6px 8px;border:1px solid var(--
 .topnav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 .scenario-line{margin:-18px 0 0;font-size:13px;color:var(--muted)}
 .scenario-line a{color:var(--accent);cursor:pointer}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.kpi{border:1px solid var(--line);border-radius:4px;padding:10px 12px;display:grid;gap:2px;align-content:start}
+.kpi .v{font:800 24px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.kpi .v small{font:500 12px var(--mono);color:var(--muted)}
+.eco{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:760px){.eco{grid-template-columns:1fr}}
+#e-scatter{width:100%;height:auto}
+#e-scatter .grid{stroke:var(--line)}
+#e-scatter circle{stroke:var(--panel);stroke-width:2}
+.callout{border:1px solid var(--line);border-radius:4px;padding:10px 12px;display:grid;gap:4px;font-size:14px}
+.ebar{height:10px;border-radius:0 4px 4px 0;display:block}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th{text-align:left;font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 10px;white-space:nowrap}
 td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
@@ -97,7 +108,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 
 <div class="wrap">
 <header>
-  <div class="lbl">East Coast prototype · v0.4 · news as of Oct 5, 2026</div>
+  <div class="lbl">East Coast prototype · v0.5 · news as of Oct 5, 2026</div>
   <h1>Eastbound 3PL Index</h1>
   <p class="sub">Find 3PLs near East Coast ports, then trace a shipment from the factory to a 3PL or straight to your showroom. Routes react to world events, the season, and what other shippers are likely to do.</p>
 </header>
@@ -105,12 +116,13 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 <nav class="topnav" role="tablist" aria-label="Sections">
   <button role="tab" data-go="planner">Route planner</button>
   <button role="tab" data-go="advisor">Mode advisor</button>
+  <button role="tab" data-go="emissions">Emissions</button>
   <button role="tab" data-go="index">3PL index</button>
   <button role="tab" data-go="ports">Ports</button>
   <button role="tab" data-go="about">About &amp; sources</button>
 </nav>
 
-<p class="scenario-line tabpanel" data-tab="advisor" id="scen-line"></p>
+<p class="scenario-line tabpanel" data-tab="advisor emissions" id="scen-line"></p>
 
 <section class="tabpanel" data-tab="planner">
   <h2>Shipment journey</h2>
@@ -123,6 +135,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
       <label><span class="lbl">Ship month</span><select id="month"></select></label>
       <label><span class="lbl">Speed ← priority → Cost</span><input id="wt" type="range" min="0" max="100" value="50"></label>
       <label><span class="lbl">Risk tolerance: low ← → high</span><input id="wr" type="range" min="0" max="100" value="40"></label>
+      <label><span class="lbl">Emissions priority: low ← → high</span><input id="we" type="range" min="0" max="100" value="20"></label>
     </div>
     <div><div class="lbl" style="margin-bottom:6px">Current events · from Sept–Oct 2026 reporting</div><div class="toggles" id="events"></div></div>
     <div><div class="lbl" style="margin-bottom:6px">Weather &amp; seasons · set by ship month, typical patterns</div><div class="toggles" id="weather"></div></div>
@@ -191,6 +204,35 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
   </div>
 </section>
 
+<section class="tabpanel" data-tab="emissions">
+  <h2>Emissions</h2>
+  <p class="note">Which route puts the least carbon in the air? Each option is scored in kg of CO₂-equivalent per tonne of cargo, door to door. The score is distance on each leg × a standard emission factor for that mode (GLEC Framework defaults, well-to-wake). Set "Emissions priority" in the route planner to let carbon steer the recommended route.</p>
+  <div class="panel">
+    <div class="kpis" id="e-kpis"></div>
+    <div class="eco">
+      <figure style="margin:0;display:grid;gap:6px">
+        <figcaption><h3>Speed vs. emissions</h3><p class="note">Each dot is a route option (main leg → US entry). Lower is cleaner, further left is faster. The dashed line links the best trade-offs: no other option is both faster and cleaner. The vertical scale is logarithmic because air is about 40× ocean.</p></figcaption>
+        <svg id="e-scatter" viewBox="0 0 640 340" role="img" aria-label="Scatter plot of door-to-door days against kg CO2e per tonne for each route option"></svg>
+        <div class="legend" id="e-legend"></div>
+      </figure>
+      <div style="display:grid;gap:12px">
+        <div class="callout" id="e-redsea"></div>
+        <div class="callout">
+          <h3>Your shipment's footprint</h3>
+          <div class="controls">
+            <label><span class="lbl">Shipment (tonnes)</span><input type="number" id="e-t" min="0.1" step="0.5" value="10"></label>
+            <label><span class="lbl">Carbon price ($/t CO₂e)</span><input type="number" id="e-price" min="0" step="5" value="0"></label>
+          </div>
+          <div id="e-ship" class="verdict"></div>
+        </div>
+      </div>
+    </div>
+    <div><h3>All route options</h3><p class="note" style="margin:2px 0 8px">Sorted cleanest first. Bars are scaled to the dirtiest ocean option. Air runs off the scale.</p>
+    <div class="scroll"><table id="e-table"></table></div></div>
+    <p class="note">Factors used: container ship 14 g, long-haul air freighter 608 g, and articulated truck 87 g CO₂e per tonne-km. Ocean distance is measured along the drawn sea lane, and air distance is great-circle + 95 km. Refrigerated containers add about 30%. Factory-to-port trucking is left out because it's the same for every option. Real figures vary with vessel size, load factor and speed (slow steaming cuts fuel burn).</p>
+  </div>
+</section>
+
 <section class="tabpanel" data-tab="index">
   <h2>3PL index</h2>
   <p class="note">Hub metros are representative East Coast locations drawn from public information. Confirm facility addresses before requesting quotes. Distance is an estimate: straight-line × 1.2.</p>
@@ -232,6 +274,9 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
     <li><a href="https://carraglobe.com/strait-of-hormuz-closure-2026/">Carra Globe, Strait of Hormuz Closure 2026</a></li>
     <li><a href="https://www.worldcargonews.com/news/2026/09/nrf-september-could-be-busiest-import-month-for-us-ports/">WorldCargo News, NRF Global Port Tracker, Sept 2026</a>: peak volume, Panama drought rerouting</li>
     <li><a href="https://www.rswarehousingsolutions.com/3pl-comparison-shipbob-shipmonk-red-stag/">RS Warehousing, ShipBob vs ShipMonk vs Red Stag</a>: e-commerce 3PL locations</li>
+    <li><a href="https://www.smartfreightcentre.org/en/our-programs/global-logistics-emissions-council/">Smart Freight Centre, GLEC Framework v3</a>: default emission intensities by mode</li>
+    <li><a href="https://www.weforum.org/stories/2024/03/slow-steaming-emissions-red-sea-trade/">World Economic Forum, why the Red Sea crisis raises CO₂</a>: Cape diversion and speed effects</li>
+    <li><a href="https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle">US EPA, emissions of a typical passenger vehicle</a>: 4.6 t CO₂ per year</li>
     <li>Map geometry: Natural Earth via world-atlas and us-atlas</li>
   </ul>
 </section>
@@ -318,7 +363,7 @@ function setMonth(){const m=+$("month").value;WEATHER.forEach(w=>$("ev-"+w.id).c
 setMonth();
 
 function scenario(){return{o:$("origin").value,O:ORIGINS[$("origin").value],tpl:$("tpl").value,destName:$("dest").value,dest:DEST[$("dest").value],
-  e:flags(EVENTS),w:flags(WEATHER),wt:$("wt").value/100,wr:1-$("wr").value/100,
+  e:flags(EVENTS),w:flags(WEATHER),wt:$("wt").value/100,wr:1-$("wr").value/100,we:$("we").value/100,
   crowdOn:$("crowdOn").checked,D:+$("crowd").value,cwt:+$("crowdPref").value}}
 
 // ---------- route engine
@@ -344,11 +389,12 @@ function candidates(S,tpl){
       const x=gwWeather(g.id,S.w);
       const d0=L.d+(PORTADJ[L.id]?.[g.id]||0)+(L.id==="Air"?1:3)+x.d,c0=L.c+(L.id==="Air"?5:12)+2;
       for(const h of hubs){
-        let d=d0+1,c=c0;
-        if(h){const a=truck(road(g.ll,METRO[h])),b=truck(road(METRO[h],S.dest));d+=a.d+2+b.d;c+=a.c+10+b.c}
-        else{const a=truck(road(g.ll,S.dest));d+=a.d;c+=a.c}
-        out.push({leg:L.id,g,h,d,c:Math.round(c),r:L.r+x.r});
+        let d=d0+1,c=c0,mi;
+        if(h){const m1=road(g.ll,METRO[h]),m2=road(METRO[h],S.dest),a=truck(m1),b=truck(m2);d+=a.d+2+b.d;c+=a.c+10+b.c;mi=m1+m2}
+        else{mi=road(g.ll,S.dest);const a=truck(mi);d+=a.d;c+=a.c}
+        out.push({leg:L.id,g,h,d,c:Math.round(c),r:L.r+x.r,mi});
       }}}
+  out.forEach(p=>Object.assign(p,emis(p,S)));
   return out;
 }
 // generalized cost: congestion days also cost money (demurrage/detention)
@@ -374,8 +420,9 @@ function equilibrium(S,N){
   }
   return{R,x,del:delays(R,x,S)};
 }
+const score=(p,x,N,S)=>(1-S.we)*gen(p,x,N,S.wt,S.wr)+S.we*Math.log10(p.co2/100);
 function rank(cands,N,S,del){
-  const scored=cands.map(p=>{const x=del?extra(p,del):0;return{...p,x,dd:Math.round(p.d+x),cc:Math.round(p.c+3*x),s:gen(p,x,N,S.wt,S.wr)}}).sort((a,b)=>a.s-b.s);
+  const scored=cands.map(p=>{const x=del?extra(p,del):0;return{...p,x,dd:Math.round(p.d+x),cc:Math.round(p.c+3*x),s:score(p,x,N,S)}}).sort((a,b)=>a.s-b.s);
   const top=[],seen=new Set();for(const p of scored){const k=p.leg+p.g.id;if(!seen.has(k)){seen.add(k);top.push(p)}if(top.length===3)break}
   return top;
 }
@@ -383,7 +430,7 @@ function solve(){
   const S=scenario(),cands=candidates(S,S.tpl),all=candidates(S,"any");
   const N={md:Math.max(...all.map(p=>p.d)),mc:Math.max(...all.map(p=>p.c))};
   const eq=equilibrium(S,N),naive=rank(cands,N,S,null),crowded=rank(cands,N,S,eq.del);
-  return{S,eq,naive,crowded,cands,top:S.crowdOn?crowded:naive};
+  return{S,N,eq,naive,crowded,cands,top:S.crowdOn?crowded:naive};
 }
 
 // ---------- network graph
@@ -488,7 +535,7 @@ function drawMaps({S,top}){
 function card(p,i,label){return`<div class="route" style="--c:${COLORS[i]}"><span class="lbl">${label}</span>
   <b>${p.leg==="Air"?"Air":"Ocean via "+(p.leg==="Cape"?"Cape of Good Hope":p.leg)} → ${p.g.name}</b>
   <span class="path">${p.h?"3PL hub: "+p.h:"Direct to showroom"} → ${$("dest").value}</span>
-  <span class="nums">≈${p.dd} days${p.x>=0.5?` (incl. +${Math.round(p.x)} crowding)`:""} · cost index ${p.cc} · risk ${p.r}/10</span></div>`}
+  <span class="nums">≈${p.dd} days${p.x>=0.5?` (incl. +${Math.round(p.x)} crowding)`:""} · cost index ${p.cc} · risk ${p.r}/10<br>${Math.round(p.co2)} kg CO₂e per tonne</span></div>`}
 function drawCrowd({S,eq,naive,crowded}){
   const share={};eq.R.forEach((r,i)=>share[r.g.id]=(share[r.g.id]||0)+eq.x[i]);
   const ids=[...PORTS.filter(p=>p.gw),...AIR].sort((a,b)=>(share[b.id]||0)-(share[a.id]||0));
@@ -506,10 +553,10 @@ function drawCrowd({S,eq,naive,crowded}){
 function render(){
   const R=solve();
   $("routes").innerHTML=R.top.map((p,i)=>card(p,i,["Best match","Alternative","Alternative"][i])).join("");
-  drawGraph(R);drawCrowd(R);drawMode(R);scenLine(R);if(!$("view-map").hidden)drawMaps(R);
+  drawGraph(R);drawCrowd(R);drawMode(R);drawEmissions(R);scenLine(R);if(!$("view-map").hidden)drawMaps(R);
   window.__last=R;
 }
-["origin","tpl","dest","wt","wr","crowdOn","crowd","crowdPref"].forEach(id=>$(id).addEventListener("input",render));
+["origin","tpl","dest","wt","wr","we","crowdOn","crowd","crowdPref"].forEach(id=>$(id).addEventListener("input",render));
 [...EVENTS,...WEATHER].forEach(e=>$("ev-"+e.id).addEventListener("change",render));
 $("month").addEventListener("input",()=>{setMonth();render()});
 function tab(which){const map=which==="map";$("tab-map").setAttribute("aria-selected",map);$("tab-graph").setAttribute("aria-selected",!map);
@@ -542,7 +589,7 @@ const BOX={f20:{cbm:33,kg:21000,n:"20' container"},f40:{cbm:67,kg:26000,n:"40' c
 const MODE_COLOR={air:"var(--alt2)",lcl:"var(--alt1)",f20:"var(--accent)",f40:"var(--accent)",r40:"var(--accent)"};
 function advCtx(R){
   const ls=legs(R.S),ocean=ls.filter(l=>l.id!=="Air"),air=ls.find(l=>l.id==="Air");
-  const c=R.cands;return{oceanX:Math.min(...ocean.map(l=>l.c))/100,airX:air.c/900,
+  const c=R.cands,oc=c.filter(p=>p.leg!=="Air"),ac=c.filter(p=>p.leg==="Air");return{oceanCO2:Math.min(...oc.map(p=>p.co2)),airCO2:Math.min(...ac.map(p=>p.co2)),oceanX:Math.min(...ocean.map(l=>l.c))/100,airX:air.c/900,
     oceanDays:Math.min(...c.filter(p=>p.leg!=="Air").map(p=>p.d)),airDays:Math.min(...c.filter(p=>p.leg==="Air").map(p=>p.d))};
 }
 function modes(sec,kg,val,due,X){
@@ -571,6 +618,7 @@ function drawMode(R){
    <span class="big">${b.name}</span>
    <span class="nums">≈${b.days} days door to door · ${usd(b.total/kg)}/kg all-in · ${usd(b.total)} total</span>
    ${M.none?`<span class="tag">No mode meets the ${sec.shelf?"shelf life":"deadline"}. This is the least-bad option.</span>`:""}
+   <span class="nums">Emissions ≈ ${fmtCO2(kg/1000*modeCO2(b.id,sec,X))} CO₂e${b.id==="air"?` · by ocean ≈ ${fmtCO2(kg/1000*modeCO2("f40",sec,X))}`:` · air would be ≈${Math.round(X.airCO2/modeCO2(b.id,sec,X))}× higher`}</span>
    ${alt?`<span class="note">Next best: ${alt.name}, ${usd(alt.total/kg)}/kg, ≈${alt.days} days.</span>`:""}`;
   // scale table + strip
   const cols=sec.reefer?["air","lcl","r40"]:["air","lcl","f20","f40"],names={air:"Air",lcl:"Ocean LCL",f20:"20' FCL",f40:"40' FCL",r40:"40' reefer"};
@@ -612,10 +660,73 @@ $("tbl").addEventListener("click",e=>{const b=e.target.closest(".pick");if(!b)re
 $("ports").innerHTML=`<tr><th>Port</th><th>2025 TEU</th><th>YoY</th><th>Notes</th></tr>`+PORTS.map(p=>`<tr><td><b>${p.name}</b></td><td class="n">${p.teu||"—"}</td>
  <td class="n ${p.yoy==null?"":p.yoy>=0?"up":"down"}">${p.yoy==null?"—":(p.yoy>0?"+":"")+p.yoy+"%"}</td><td class="note">${p.note||""}</td></tr>`).join("");
 
+// ---------- emissions
+// GLEC Framework v3 default intensities, g CO2e per tonne-km (well-to-wake)
+const EF={ocean:14,air:608,truck:87};
+const LEGC={Panama:"var(--leg1)",Suez:"var(--leg2)",Cape:"var(--leg3)",Air:"var(--leg4)"};
+function pathKm(pts){let k=0;for(let i=1;i<pts.length;i++)k+=hav([pts[i-1][1],pts[i-1][0]],[pts[i][1],pts[i][0]])*1.609;return k}
+function emis(p,S){const air=p.leg==="Air",km=pathKm(lane(p,S))+(air?95:0);
+  const eMain=km*(air?EF.air:EF.ocean)/1000,eLand=p.mi*1.609*EF.truck/1000;
+  return{km:Math.round(km),eMain,eLand,co2:eMain+eLand}}
+function modeCO2(id,sec,X){return id==="air"?X.airCO2:X.oceanCO2*(sec.reefer?1.3:1)*(id==="lcl"?1.1:1)}
+const fmtCO2=kg=>kg>=1000?(kg/1000).toFixed(kg>=10000?0:1)+" t":Math.round(kg)+" kg";
+const shortLeg=l=>l==="Air"?"Air":l==="Cape"?"Cape":l;
+function drawEmissions(R){
+  const {S,N}=R;
+  // one option per (main leg, US entry): the hub the current settings would pick
+  const by={};R.cands.forEach(p=>{const k=p.leg+p.g.id,s=score(p,0,N,S);if(!by[k]||s<by[k].s)by[k]={...p,s}});
+  const opts=Object.values(by).sort((a,b)=>a.co2-b.co2);
+  const green=opts[0],best=R.top[0],air=opts.filter(o=>o.leg==="Air")[0];
+  const tile=(l,o,extra)=>`<div class="kpi"><span class="lbl">${l}</span><span class="v">${Math.round(o.co2)} <small>kg CO₂e/t</small></span><span class="note">${shortLeg(o.leg)} → ${o.g.name} · ≈${o.d} days${extra||""}</span></div>`;
+  $("e-kpis").innerHTML=tile("Lowest-emission route",green)+tile("Your best match",best,best.leg+best.g.id===green.leg+green.g.id?" · already the cleanest":` · ${Math.round((best.co2/green.co2-1)*100)}% above cleanest`)+tile("Fastest (air)",air,` · ${Math.round(air.co2/green.co2)}× the cleanest`);
+
+  // scatter: x = days, y = log kg CO2e/t
+  const svg=$("e-scatter");svg.innerHTML="";const W=640,H=340,m={l:58,r:16,t:14,b:42};
+  const xs=opts.map(o=>o.d),ys=opts.map(o=>o.co2);
+  const x0=0,x1=Math.ceil((Math.max(...xs)+4)/10)*10;
+  const y0=Math.pow(10,Math.floor(Math.log10(Math.min(...ys)))),y1=Math.pow(10,Math.ceil(Math.log10(Math.max(...ys))));
+  const X=v=>m.l+(v-x0)/(x1-x0)*(W-m.l-m.r),Y=v=>H-m.b-(Math.log10(v)-Math.log10(y0))/(Math.log10(y1)-Math.log10(y0))*(H-m.t-m.b);
+  for(let v=y0;v<=y1;v*=10){for(const k of[1,3]){const val=v*k;if(val>y1)continue;
+    svg.append(el("line",{x1:m.l,x2:W-m.r,y1:Y(val),y2:Y(val),class:"grid","stroke-dasharray":k===3?"2 4":""}));
+    svg.append(el("text",{x:m.l-6,y:Y(val)+4,"text-anchor":"end",class:"small"},val>=1000?val/1000+"k":val))}}
+  for(let v=0;v<=x1;v+=10){svg.append(el("text",{x:X(v),y:H-m.b+16,"text-anchor":"middle",class:"small"},v))}
+  svg.append(el("line",{x1:m.l,x2:W-m.r,y1:H-m.b,y2:H-m.b,stroke:"var(--muted)"}));
+  svg.append(el("text",{x:(m.l+W-m.r)/2,y:H-6,"text-anchor":"middle",class:"small"},"Door-to-door days"));
+  svg.append(el("text",{x:14,y:(m.t+H-m.b)/2,transform:`rotate(-90 14 ${(m.t+H-m.b)/2})`,"text-anchor":"middle",class:"small"},"kg CO₂e per tonne (log)"));
+  // Pareto frontier: options no other option beats on both days and CO2
+  const front=[];[...opts].sort((a,b)=>a.d-b.d||a.co2-b.co2).forEach(o=>{if(!front.length||o.co2<front.at(-1).co2)front.push(o)});
+  svg.append(el("path",{d:"M"+front.map(o=>X(o.d)+","+Y(o.co2)).join("L"),fill:"none",stroke:"var(--good)","stroke-width":2,"stroke-dasharray":"5 4"}));
+  opts.forEach(o=>{const c=el("circle",{cx:X(o.d),cy:Y(o.co2),r:o===green||o.leg+o.g.id===best.leg+best.g.id?7:5,fill:LEGC[o.leg]});
+    c.append(el("title",{},`${shortLeg(o.leg)} → ${o.g.name}: ${o.d} days, ${Math.round(o.co2)} kg CO₂e/t`));svg.append(c)});
+  const ring=el("circle",{cx:X(best.d),cy:Y(best.co2),r:11,fill:"none",stroke:"var(--ink)","stroke-width":1.5});svg.append(ring);
+  svg.append(el("text",{x:X(best.d)+14,y:Y(best.co2)-8,class:"small",style:"fill:var(--ink)"},"Your best match"));
+  front.forEach(o=>{if(o.leg+o.g.id===best.leg+best.g.id)return;svg.append(el("text",{x:X(o.d)+9,y:Y(o.co2)+14,class:"small"},`${shortLeg(o.leg)} → ${o.g.id.replace("MIAair","MIA")}`))});
+  $("e-legend").innerHTML=["Panama","Suez","Cape","Air"].map(l=>`<span><i style="background:${LEGC[l]};height:10px;width:10px;border-radius:50%"></i>${legName(l)}</span>`).join("")+`<span><i style="background:var(--good)"></i>Best trade-offs</span>`;
+
+  // Red Sea diversion effect on this lane
+  const gw=(best.leg==="Air"?green:best).g.id,suez=by["Suez"+gw],cape=by["Cape"+gw];
+  $("e-redsea").innerHTML=suez&&cape?`<span class="lbl">Red Sea diversion effect</span><b>Going around the Cape instead of through Suez adds ${Math.round((cape.co2/suez.co2-1)*100)}% CO₂e on this lane</b>
+    <span class="note">${S.O.port} → ${suez.g.name}: ${suez.km.toLocaleString()} km via Suez vs ${cape.km.toLocaleString()} km via the Cape. Ships speeding up to make up lost time burn more fuel still, so this is a floor.</span>`:"";
+
+  // shipment footprint
+  const tn=Math.max(0.1,+$("e-t").value||0.1),price=Math.max(0,+$("e-price").value||0);
+  const row=(l,o)=>{const kg=o.co2*tn;return`<div class="row"><span class="lbl">${l}</span><b>${fmtCO2(kg)} CO₂e</b><span class="nums">${shortLeg(o.leg)} → ${o.g.name}${price?` · carbon cost $${Math.round(kg/1000*price).toLocaleString()}`:""}</span></div>`};
+  const saved=(best.co2-green.co2)*tn,airx=air.co2*tn;
+  $("e-ship").innerHTML=row("Cleanest route",green)+row("Your best match",best)+row("By air",air)+
+   `<p class="note">${saved>1?`Switching to the cleanest route saves ${fmtCO2(saved)} CO₂e. `:""}Flying this shipment instead of the cleanest ocean route emits about as much as ${Math.max(1,Math.round((airx-green.co2*tn)/4600))} passenger cars do in a year (EPA: 4.6 t CO₂ per car).</p>`;
+
+  // table
+  const maxOcean=Math.max(...opts.filter(o=>o.leg!=="Air").map(o=>o.co2));
+  $("e-table").innerHTML=`<tr><th>Route</th><th>Main-leg distance</th><th>Days</th><th>Main leg</th><th>Inland truck</th><th>Total kg CO₂e/t</th><th style="width:30%"></th></tr>`+
+   opts.map(o=>{const w=Math.min(100,o.co2/maxOcean*100);return`<tr><td><b>${legName(o.leg)}</b> → ${o.g.name}${o.h?`<br><span class="note">via ${o.h}</span>`:""}</td><td class="n">${o.km.toLocaleString()} km</td><td class="n">${o.d}</td><td class="n">${Math.round(o.eMain)}</td><td class="n">${Math.round(o.eLand)}</td><td class="n"><b>${Math.round(o.co2)}</b></td>
+   <td><span class="ebar" style="width:${w}%;background:${LEGC[o.leg]}"></span>${o.co2>maxOcean?`<span class="note">off scale · ${Math.round(o.co2/maxOcean)}× the dirtiest ocean option</span>`:""}</td></tr>`}).join("");
+}
+["e-t","e-price"].forEach(id=>$(id).addEventListener("input",()=>drawEmissions(window.__last)));
+
 // ---------- top-level tabs
-const PANES=["planner","advisor","index","ports","about"];
+const PANES=["planner","advisor","emissions","index","ports","about"];
 function showTab(id){if(!PANES.includes(id))id="planner";
-  document.querySelectorAll(".tabpanel").forEach(s=>s.hidden=s.dataset.tab!==id);
+  document.querySelectorAll(".tabpanel").forEach(s=>s.hidden=!s.dataset.tab.split(" ").includes(id));
   document.querySelectorAll(".topnav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.go===id));
   try{history.replaceState(null,"","#"+id)}catch(e){}
   if(id==="planner"&&!$("view-map").hidden&&window.__last)drawMaps(window.__last);
