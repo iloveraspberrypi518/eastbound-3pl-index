@@ -1,0 +1,22 @@
+{
+  "as_of": "2026-10-01",
+  "ocean_fcl40": [
+    {"origin": "cn", "lane": "Shanghai → New York", "usd": 10428, "unit": "per 40' container", "date": "2026-10-01", "kind": "Published index", "source": "Drewry World Container Index", "url": "https://www.thedcn.com.au/news/world-container-index-1-october-2026"},
+    {"origin": "vn", "lane": "China / East Asia → US East Coast (FBX03)", "usd": 9600, "unit": "per 40' container", "date": "2026-09-30", "kind": "Published index", "source": "Freightos Baltic Index FBX03", "url": "https://www.freightos.com/freight-resources/china-us-truce-to-reduce-some-tariffs-and-likely-postpone-port-fees-september-30-2026-update/"},
+    {"origin": "in", "lane": "Nhava Sheva → New York (40' high cube)", "usd": 12600, "unit": "per 40' container", "date": "2026-09-15", "kind": "Lowest published carrier rate", "source": "Skypace carrier rate listing", "url": "https://skypace.com/ocean-freight/rates/nhava-sheva-(jnpt)-to-new-york"}
+  ],
+  "reference": [
+    {"origin": "cn", "lane": "China / East Asia → US East Coast (FBX03)", "usd": 9600, "unit": "per 40' container", "date": "2026-09-30", "kind": "Published index", "source": "Freightos Baltic Index FBX03", "url": "https://www.freightos.com/freight-resources/china-us-truce-to-reduce-some-tariffs-and-likely-postpone-port-fees-september-30-2026-update/"},
+    {"origin": "cn", "lane": "Shanghai → Los Angeles", "usd": 7835, "unit": "per 40' container", "date": "2026-10-01", "kind": "Published index", "source": "Drewry World Container Index", "url": "https://www.thedcn.com.au/news/world-container-index-1-october-2026"},
+    {"origin": "vn", "lane": "Vietnam → US East Coast", "usd": 9000, "unit": "per 40' container (approx.)", "date": "2026-07-13", "kind": "News report", "source": "Tuoi Tre News", "url": "https://news.tuoitre.vn/vietnam-us-container-freight-rates-surge-to-nearly-9000-per-container-103260713123316834.htm"}
+  ],
+  "air": [
+    {"origin": "*", "lane": "Far East → USA", "usd": 6.30, "unit": "per kg", "date": "2026-09-08", "kind": "Published index", "source": "Freightos Air Index (FAX)", "url": "https://www.stattimes.com/air-cargo/global-air-cargo-rates-ease-after-peak-season-freightos-data-shows-1357688"}
+  ],
+  "derived": {
+    "note": "Estimates derived from the 40' rate where no free public index exists. Replace with real quotes.",
+    "f20_of_f40": 0.62,
+    "r40_of_f40": 1.8,
+    "lcl_cbm_of_f40": 0.02
+  }
+}

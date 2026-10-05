@@ -1,43 +1,49 @@
 <title>Eastbound 3PL Index</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one column, stacked working sections (journey with graph/map views + crowd model, 3PL index, ports). Bare-bones tool. */
+/* Layout: navy app bar with tabs; one working column below. Plain, data-tool look. */
 :root{
-  --ink:#14212b; --muted:#5b6b78; --paper:#f3f5f6; --panel:#ffffff; --line:#d5dde2;
-  --accent:#0a6c8c; --alt1:#b7791f; --alt2:#7a5ea8; --bad:#b4372f; --good:#2f7d4f;
-  --leg1:#2a78d6; --leg2:#eb6834; --leg3:#1baf7a; --leg4:#eda100; --sea:#e4edf2; --land:#cfd8dd; --border:#ffffff; --hazard:#b4372f;
-  --display:"Archivo",system-ui,sans-serif; --body:"Archivo",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --ink:#172331; --muted:#5d6b7a; --paper:#f2f4f7; --panel:#ffffff; --line:#dde3ea;
+  --accent:#1d5fa6; --alt1:#b7791f; --alt2:#7a5ea8; --bad:#b4372f; --good:#2f7d4f;
+  --bar:#0f2537; --bar-ink:#e6edf5; --bar-muted:#93a6ba; --signal:#e8590c;
+  --leg1:#2a78d6; --leg2:#eb6834; --leg3:#1baf7a; --leg4:#eda100; --s5:#e87ba4; --s6:#008300;
+  --sea:#e6edf3; --land:#d3dbe3; --border:#ffffff; --hazard:#b4372f;
+  --display:"IBM Plex Sans",system-ui,sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --ink:#e3eaee; --muted:#93a4b0; --paper:#0f171d; --panel:#16212a; --line:#2a3946;
-  --accent:#4fb3d4; --alt1:#e0a84a; --alt2:#a990d6; --bad:#e2716a; --good:#6cc08f;
-  --leg1:#3987e5; --leg2:#d95926; --leg3:#199e70; --leg4:#c98500; --sea:#12202a; --land:#2b3a46; --border:#16212a; --hazard:#e2716a; color-scheme:dark}}
+  --ink:#e4eaf0; --muted:#95a3b2; --paper:#0d1620; --panel:#141f2b; --line:#273544;
+  --accent:#6aa5e8; --alt1:#e0a84a; --alt2:#a990d6; --bad:#e2716a; --good:#6cc08f;
+  --bar:#08111a; --bar-ink:#e6edf5; --bar-muted:#8396aa; --signal:#f07a3a;
+  --leg1:#3987e5; --leg2:#d95926; --leg3:#199e70; --leg4:#c98500; --s5:#d55181; --s6:#008300;
+  --sea:#101c27; --land:#253443; --border:#141f2b; --hazard:#e2716a; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --ink:#e3eaee; --muted:#93a4b0; --paper:#0f171d; --panel:#16212a; --line:#2a3946;
-  --accent:#4fb3d4; --alt1:#e0a84a; --alt2:#a990d6; --bad:#e2716a; --good:#6cc08f;
-  --leg1:#3987e5; --leg2:#d95926; --leg3:#199e70; --leg4:#c98500; --sea:#12202a; --land:#2b3a46; --border:#16212a; --hazard:#e2716a; color-scheme:dark}
+  --ink:#e4eaf0; --muted:#95a3b2; --paper:#0d1620; --panel:#141f2b; --line:#273544;
+  --accent:#6aa5e8; --alt1:#e0a84a; --alt2:#a990d6; --bad:#e2716a; --good:#6cc08f;
+  --bar:#08111a; --bar-ink:#e6edf5; --bar-muted:#8396aa; --signal:#f07a3a;
+  --leg1:#3987e5; --leg2:#d95926; --leg3:#199e70; --leg4:#c98500; --s5:#d55181; --s6:#008300;
+  --sea:#101c27; --land:#253443; --border:#141f2b; --hazard:#e2716a; color-scheme:dark}
 body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--body);padding:0 16px}
-.wrap{max-width:1120px;margin:0 auto;padding-block:28px 60px;display:grid;gap:36px}
+.wrap{max-width:1120px;margin:0 auto;padding-block:24px 60px;display:grid;gap:28px}
 h1{font:800 28px/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
-h2{font:700 19px/1.2 var(--display);margin:0 0 4px}
+h2{font:600 22px/1.2 var(--display);margin:0 0 4px;letter-spacing:-.005em}
 h3{font:600 15px/1.2 var(--display);margin:0}
 .sub{color:var(--muted);margin:6px 0 0;max-width:70ch}
-.lbl{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;gap:14px}
+.lbl{font:500 12.5px var(--body);color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:16px;display:grid;gap:14px}
 .controls{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end}
 .controls label{display:grid;gap:4px}
 select,input[type=search]{font:14px var(--body);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
 input[type=range]{accent-color:var(--accent);width:150px}
 .toggles{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.chip{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer}
+.chip{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:3px;padding:4px 10px;font-size:13px;cursor:pointer;background:var(--panel)}
 .chip:has(input:checked){border-color:var(--bad);color:var(--bad)}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
 .tabs button{font:600 14px var(--body);background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:6px 12px;cursor:pointer}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 .scroll{overflow-x:auto}
 svg text{fill:var(--ink);font:12px var(--body)}
-svg .col{fill:var(--muted);font:500 10px var(--mono);letter-spacing:.08em}
+svg .col{fill:var(--muted);font:600 11px var(--body)}
 svg .small{font:500 10px var(--mono);fill:var(--muted)}
 .maps{display:grid;grid-template-columns:2fr 1fr;gap:12px}
 @media (max-width:760px){.maps{grid-template-columns:1fr}}
@@ -76,11 +82,18 @@ details summary{cursor:pointer;font:600 14px var(--display)}
 .rates label{display:grid;gap:3px}
 .rates input{width:90px;font:13px var(--mono);padding:5px 6px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
 input[type=number]{font:14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);width:110px}
-.topnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:4px;overflow-x:auto;background:var(--paper);border-bottom:1px solid var(--line);padding-top:6px;margin-top:-18px}
-.topnav button{font:600 14px var(--body);background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:10px 14px;cursor:pointer;white-space:nowrap}
-.topnav button:hover{color:var(--ink)}
-.topnav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
-.scenario-line{margin:-18px 0 0;font-size:13px;color:var(--muted)}
+.appbar{background:var(--bar);color:var(--bar-ink);margin:0 -16px;padding:0 16px;position:sticky;top:env(safe-area-inset-top,0px);z-index:10}
+.appbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;padding-top:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand b{font:700 18px var(--display);letter-spacing:-.01em}
+.brand span{font-size:13px;color:var(--bar-muted)}
+.asof{margin-left:auto;font-size:12.5px;color:var(--bar-muted)}
+.topnav{max-width:1120px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;padding-top:6px}
+.topnav button{font:500 14px var(--body);background:none;border:0;border-bottom:3px solid transparent;color:var(--bar-muted);padding:9px 12px 8px;cursor:pointer;white-space:nowrap}
+.topnav button:hover{color:var(--bar-ink)}
+.topnav button[aria-selected="true"]{color:var(--bar-ink);border-bottom-color:var(--signal)}
+.topnav button:focus-visible{outline:2px solid var(--bar-ink);outline-offset:-4px}
+.scenario-line{margin:0;font-size:13px;color:var(--muted)}
 .scenario-line a{color:var(--accent);cursor:pointer}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .kpi{border:1px solid var(--line);border-radius:4px;padding:10px 12px;display:grid;gap:2px;align-content:start}
@@ -111,10 +124,10 @@ input[type=number]{font:14px var(--mono);padding:6px 8px;border:1px solid var(--
 .sb-sel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:32px;font-size:14px}
 .sb-msg{font-size:13px;color:var(--bad);min-height:18px}
 table{border-collapse:collapse;width:100%;font-size:14px}
-th{text-align:left;font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 10px;white-space:nowrap}
+th{text-align:left;font:600 12.5px var(--body);color:var(--muted);border-bottom:1px solid var(--line);padding:8px 10px;white-space:nowrap}
 td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
 td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
-.pill{font:500 11px var(--mono);padding:2px 7px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.pill{font:500 12px var(--body);padding:1px 7px;border-radius:3px;border:1px solid var(--line);white-space:nowrap}
 .up{color:var(--good)}.down{color:var(--bad)}
 .note{font-size:13px;color:var(--muted);max-width:80ch;margin:0}
 .src a{color:var(--accent)}
@@ -123,24 +136,28 @@ button.pick{font:13px var(--body);background:none;border:1px solid var(--line);c
 button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 
+<div class="appbar">
+  <div class="appbar-in">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="5" width="20" height="12" rx="1.5" fill="var(--signal)"/><path d="M5 8v6M9 8v6M13 8v6M17 8v6" stroke="var(--bar)" stroke-width="1.6"/></svg>
+      <b>Eastbound</b><span>3PL &amp; route index · US East Coast</span>
+    </div>
+    <span class="asof">Rates and news as of Oct 5, 2026 · prototype</span>
+  </div>
+  <nav class="topnav" role="tablist" aria-label="Sections">
+    <button role="tab" data-go="planner">Route planner</button>
+    <button role="tab" data-go="advisor">Mode advisor</button>
+    <button role="tab" data-go="duties">Tariffs &amp; duties</button>
+    <button role="tab" data-go="emissions">Emissions</button>
+    <button role="tab" data-go="builder">Scenario builder</button>
+    <button role="tab" data-go="index">3PL index</button>
+    <button role="tab" data-go="ports">Ports</button>
+    <button role="tab" data-go="about">About &amp; sources</button>
+  </nav>
+</div>
 <div class="wrap">
-<header>
-  <div class="lbl">East Coast prototype · v0.6 · news as of Oct 5, 2026</div>
-  <h1>Eastbound 3PL Index</h1>
-  <p class="sub">Find 3PLs near East Coast ports, then trace a shipment from the factory to a 3PL or straight to your showroom. Routes react to world events, the season, and what other shippers are likely to do.</p>
-</header>
 
-<nav class="topnav" role="tablist" aria-label="Sections">
-  <button role="tab" data-go="planner">Route planner</button>
-  <button role="tab" data-go="advisor">Mode advisor</button>
-  <button role="tab" data-go="emissions">Emissions</button>
-  <button role="tab" data-go="builder">Scenario builder</button>
-  <button role="tab" data-go="index">3PL index</button>
-  <button role="tab" data-go="ports">Ports</button>
-  <button role="tab" data-go="about">About &amp; sources</button>
-</nav>
-
-<p class="scenario-line tabpanel" data-tab="advisor emissions builder" id="scen-line"></p>
+<p class="scenario-line tabpanel" data-tab="advisor duties emissions builder" id="scen-line"></p>
 
 <section class="tabpanel" data-tab="planner">
   <h2>Shipment journey</h2>
@@ -214,11 +231,42 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
       <p class="note" style="margin:2px 0 8px">Best mode for typical cargo in each sector, by shipment size, under the current scenario. Click a row to load it above.</p>
       <div class="scroll"><table class="matrix" id="matrix"></table></div>
     </div>
-    <details>
-      <summary>Rate assumptions (replace with your own quotes)</summary>
-      <p class="note" style="margin-top:6px">These are illustrative normal-market rates for Asia to the US East Coast, not quotes. The current-event scenarios scale them. Right now: <span id="mult" class="nums"></span>.</p>
+    <details open>
+      <summary>Freight rates used</summary>
+      <p class="note" style="margin-top:6px" id="rate-src"></p>
+      <p class="note">Scenario adjustment versus today's market: <span id="mult" class="nums"></span>. Edit any rate to use your own quote.</p>
       <div class="rates" id="rates"></div>
     </details>
+  </div>
+</section>
+
+<section class="tabpanel" data-tab="duties">
+  <h2>Tariffs &amp; duties</h2>
+  <p class="note">Estimate US import duties and the landed cost of a shipment from China, Vietnam or India. It stacks the base (MFN) duty, Section 301 duties, Section 232 metals duties and customs fees, then adds freight at today's published rates. The HTS codes are examples. Confirm the classification and rates with a licensed customs broker before you rely on them.</p>
+  <div class="panel">
+    <div class="controls">
+      <label><span class="lbl">Product</span><select id="d-prod"></select></label>
+      <label><span class="lbl">Goods value per shipment ($)</span><input type="number" id="d-val" min="0" step="1000" value="60000"></label>
+      <label><span class="lbl">Units per shipment</span><input type="number" id="d-units" min="1" step="100" value="10000"></label>
+      <label><span class="lbl">Shipment weight (kg)</span><input type="number" id="d-kg" min="1" step="100" value="4000"></label>
+      <label><span class="lbl">Mode</span><select id="d-mode"><option value="ocean">Ocean, 40' container</option><option value="air">Air</option></select></label>
+    </div>
+    <div class="controls">
+      <label><span class="lbl">Base duty (MFN) %</span><input type="number" id="d-mfn" min="0" step="0.1"></label>
+      <label><span class="lbl">China Section 301 list %</span><input type="number" id="d-cn301" min="0" step="0.5"></label>
+      <label><span class="lbl">Section 232 %</span><input type="number" id="d-232" min="0" step="1"></label>
+      <span class="note" id="d-note" style="flex:1;min-width:220px"></span>
+    </div>
+    <div class="eco">
+      <figure style="margin:0;display:grid;gap:6px">
+        <figcaption><h3>What gets added on top of the goods</h3><p class="note">Duties, fees and freight per shipment, by sourcing country.</p></figcaption>
+        <svg id="d-chart" viewBox="0 0 560 190" role="img" aria-label="Stacked bars of duties, fees and freight by country"></svg>
+        <div class="legend" id="d-legend"></div>
+      </figure>
+      <div class="callout"><h3>What's in force (Oct 2026)</h3><ul class="flags" id="d-context"></ul></div>
+    </div>
+    <div class="scroll"><table id="d-table"></table></div>
+    <p class="note">Customs value is the goods value. International freight isn't dutiable in the US. The MPF is 0.3464% (FY2027 minimum $34.58, maximum $670.86). The HMF is 0.125% on ocean cargo only. Section 232 goods are exempt from the forced-labor 301 duty. Antidumping and countervailing duties aren't calculated here.</p>
   </div>
 </section>
 
@@ -301,10 +349,11 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 <section class="tabpanel src" data-tab="about">
   <h2>About</h2>
   <div class="panel">
-    <p class="note" style="max-width:70ch">Eastbound 3PL Index helps retailers that import into the US East Coast choose a route, a shipping mode and a 3PL. It's an early prototype. Transit times are typical estimates, route costs are a relative index, and mode-advisor rates are illustrative until real quotes are added.</p>
+    <p class="note" style="max-width:70ch">Eastbound 3PL Index helps retailers that import into the US East Coast choose a route, a shipping mode and a 3PL. It's an early prototype. Transit times are typical estimates, freight rates come from dated public indexes, and tariff figures are estimates to confirm with a customs broker.</p>
     <div><h3>How to use it</h3>
     <ol class="flags" style="margin-top:6px">
       <li><b>Route planner:</b> choose a factory region, 3PL, final stop and ship month. Switch news and weather scenarios on or off. The best route and two alternatives are highlighted on the graph and the map. The crowd-effect panel shows how other shippers' choices change your best route.</li>
+      <li><b>Tariffs &amp; duties:</b> pick a product and shipment value to compare duties, fees, freight and landed cost for China, Vietnam and India.</li>
       <li><b>Mode advisor:</b> choose a sector, weight, value and deadline to see whether air, a shared container or a full container is cheapest. It uses the route planner's scenario.</li>
       <li><b>3PL index:</b> filter providers by type or port. Use "Route it" to send one to the route planner.</li>
       <li><b>Ports:</b> 2025 volumes for East Coast ports.</li>
@@ -323,11 +372,21 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
     <li><a href="https://www.smartfreightcentre.org/en/our-programs/global-logistics-emissions-council/">Smart Freight Centre, GLEC Framework v3</a>: default emission intensities by mode</li>
     <li><a href="https://www.weforum.org/stories/2024/03/slow-steaming-emissions-red-sea-trade/">World Economic Forum, why the Red Sea crisis raises CO₂</a>: Cape diversion and speed effects</li>
     <li><a href="https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle">US EPA, emissions of a typical passenger vehicle</a>: 4.6 t CO₂ per year</li>
+    <li><a href="https://www.thedcn.com.au/news/world-container-index-1-october-2026">Drewry World Container Index, Oct 1, 2026</a>: Shanghai → New York $10,428 per 40'</li>
+    <li><a href="https://www.freightos.com/freight-resources/china-us-truce-to-reduce-some-tariffs-and-likely-postpone-port-fees-september-30-2026-update/">Freightos FBX03, Sept 30, 2026</a>: Asia → US East Coast ≈$9,600 per 40'</li>
+    <li><a href="https://skypace.com/ocean-freight/rates/nhava-sheva-(jnpt)-to-new-york">Skypace carrier listing</a>: Nhava Sheva → New York from $12,600 per 40' HC</li>
+    <li><a href="https://www.stattimes.com/air-cargo/global-air-cargo-rates-ease-after-peak-season-freightos-data-shows-1357688">Freightos Air Index</a>: Far East → USA $6.30/kg</li>
+    <li><a href="https://taxnews.ey.com/news/2026-1607-ustr-finalizes-section-301-forced-labor-tariffs-on-60-economies-additional-tariffs-of-10-percent-or-125-percent-take-effect-24-july-2026">EY, Section 301 forced-labor tariffs</a> and <a href="https://globaltradealert.org/blog/forced-labour-section-301-final-action">Global Trade Alert</a>: 10% / 12.5% duties from Jul 24, 2026</li>
+    <li><a href="https://dimerco.com/us-tariff-update-2026/">Dimerco, US Tariff Update 2026</a>: Section 232 and the wider tariff picture</li>
+    <li><a href="https://borderless.us/guides/mpf-changes-october-1-2026">Borderless, MPF changes Oct 1, 2026</a>: FY2027 fee limits</li>
+    <li>All rate and tariff data is also published as SQL: <code>port-index/data/eastbound.sql</code> in the GitHub repo</li>
     <li>Map geometry: Natural Earth via world-atlas and us-atlas</li>
   </ul>
 </section>
 </div>
 
+<script type="application/json" id="rates-data">__RATES__</script>
+<script type="application/json" id="tariffs-data">__TARIFFS__</script>
 <script type="application/json" id="world-data">__WORLD__</script>
 <script type="application/json" id="us-data">__US__</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
@@ -578,10 +637,13 @@ function drawMaps({S,top}){
 }
 
 // ---------- route cards + crowd panel
+function usdRoute(p){const S=window.__S;if(!S)return"";const D={...S,e:Object.fromEntries(EVENTS.map(e=>[e.id,e.on]))};
+  if(p.leg==="Air"){const a=legs(S).find(l=>l.id==="Air"),ad=legs(D).find(l=>l.id==="Air");return`≈ $${Math.round(10000*rate("air")*a.c/ad.c/100)*100} per 10 t by air`}
+  const per=rate("f40")/Math.min(...legs(D).filter(l=>l.id!=="Air").map(l=>l.c));return`≈ $${(Math.round(p.cc*per/100)*100).toLocaleString()} per 40' container, door to door`}
 function card(p,i,label){return`<div class="route" style="--c:${COLORS[i]}"><span class="lbl">${label}</span>
   <b>${p.leg==="Air"?"Air":"Ocean via "+(p.leg==="Cape"?"Cape of Good Hope":p.leg)} → ${p.g.name}</b>
   <span class="path">${p.h?"3PL hub: "+p.h:"Direct to showroom"} → ${$("dest").value}</span>
-  <span class="nums">≈${p.dd} days${p.x>=0.5?` (incl. +${Math.round(p.x)} crowding)`:""} · cost index ${p.cc} · risk ${Math.min(10,p.r)}/10<br>${Math.round(p.co2)} kg CO₂e per tonne</span></div>`}
+  <span class="nums">≈${p.dd} days${p.x>=0.5?` (incl. +${Math.round(p.x)} crowding)`:""} · cost index ${p.cc} · risk ${Math.min(10,p.r)}/10<br>${Math.round(p.co2)} kg CO₂e per tonne</span><span class="nums" style="color:var(--ink)">${usdRoute(p)}</span></div>`}
 function drawCrowd({S,eq,naive,crowded}){
   const share={};eq.R.forEach((r,i)=>share[r.g.id]=(share[r.g.id]||0)+eq.x[i]);
   const ids=[...PORTS.filter(p=>p.gw),...AIR].sort((a,b)=>(share[b.id]||0)-(share[a.id]||0));
@@ -597,9 +659,9 @@ function drawCrowd({S,eq,naive,crowded}){
 }
 
 function render(){
-  const R=solve();
+  const R=solve();window.__S=R.S;if(ratesOrigin!==R.S.O.c&&!ratesEdited)fillRates(R.S.O.c);
   $("routes").innerHTML=R.top.map((p,i)=>card(p,i,["Best match","Alternative","Alternative"][i])).join("");
-  drawGraph(R);drawCrowd(R);drawMode(R);drawEmissions(R);scenLine(R);if(typeof sbRender==="function"&&SB)sbRender();if(!$("view-map").hidden)drawMaps(R);
+  drawGraph(R);drawCrowd(R);drawMode(R);drawDuties(R);drawEmissions(R);scenLine(R);if(typeof sbRender==="function"&&SB)sbRender();if(!$("view-map").hidden)drawMaps(R);
   window.__last=R;
 }
 ["origin","tpl","dest","wt","wr","we","crowdOn","crowd","crowdPref"].forEach(id=>$(id).addEventListener("input",render));
@@ -625,8 +687,15 @@ const FLAGS={
  Apparel:["Country-of-origin labeling and textile fiber content rules apply.","Children's apparel needs CPSC compliance (tracking labels, testing).","Seasonal goods lose value fast. A late fast-fashion shipment may sell only at markdown."],
  Food:["FDA Prior Notice must be filed before food arrives in the US.","Chilled and frozen cargo needs reefer containers with temperature records. Reefer LCL is rarely offered.","Check that the 3PL is food-grade (and cold-chain capable where needed)."],
  Defense:["Defense articles may need ITAR or EAR authorization. Confirm before booking.","US government-owned military cargo generally must move on US-flag vessels (Cargo Preference Act of 1904).","Hazardous goods follow IMDG (ocean) and IATA DGR (air). Some classes fly on cargo-only aircraft, and LCL is often refused.","Plan for chain of custody and a 3PL with the right security clearances."]};
-const RATE_DEF=[["air","Air ($/kg)",4.5],["lcl","Ocean LCL ($/m³)",95],["f20","20' container ($)",2300],["f40","40' container ($)",3000],["r40","40' reefer ($)",6000]];
-$("rates").innerHTML=RATE_DEF.map(([k,l,v])=>`<label><span class="lbl">${l}</span><input type="number" id="rate-${k}" value="${v}" min="0" step="any"></label>`).join("");
+const RATES=JSON.parse($("rates-data").textContent),TARIFFS=JSON.parse($("tariffs-data").textContent);
+function ratesFor(c){const o=RATES.ocean_fcl40.find(x=>x.origin===c).usd,D=RATES.derived;
+  return{air:RATES.air[0].usd,lcl:Math.round(o*D.lcl_cbm_of_f40),f20:Math.round(o*D.f20_of_f40),f40:o,r40:Math.round(o*D.r40_of_f40)}}
+const RATE_DEF=[["air","Air ($/kg)",0],["lcl","Ocean LCL ($/m³)",0],["f20","20' container ($)",0],["f40","40' container ($)",0],["r40","40' reefer ($)",0]];
+$("rates").innerHTML=RATE_DEF.map(([k,l,v])=>`<label><span class="lbl">${l}</span><input type="number" id="rate-${k}" value="${v}" min="0" step="any"></label>`).join("")+`<button class="pick" id="rate-reset" type="button">Reset to published rates</button>`;
+let ratesEdited=false,ratesOrigin=null;
+function fillRates(c){const r=ratesFor(c);RATE_DEF.forEach(([k])=>$("rate-"+k).value=r[k]);ratesEdited=false;ratesOrigin=c;
+  const o=RATES.ocean_fcl40.find(x=>x.origin===c),a=RATES.air[0];
+  $("rate-src").innerHTML=`40' container: <b>$${o.usd.toLocaleString()}</b> (${o.lane}), ${o.source}, ${o.date}. Air: <b>$${a.usd.toFixed(2)}/kg</b> (${a.lane}), ${a.source}, ${a.date}. The 20' container, reefer and LCL rates are estimated from the 40' rate.`}
 const rate=k=>Math.max(0,+$("rate-"+k).value||0);
 const sel=$("sec");["Apparel","Food","Defense"].forEach(g=>{const og=document.createElement("optgroup");og.label=g;SECTORS.filter(s=>s.g===g).forEach(s=>og.append(new Option(s.n,s.id)));sel.append(og)});
 function loadSector(id){const s=SECTORS.find(x=>x.id===id);sel.value=id;$("val").value=s.v;$("due").value=s.due}
@@ -635,7 +704,8 @@ const BOX={f20:{cbm:33,kg:21000,n:"20' container"},f40:{cbm:67,kg:26000,n:"40' c
 const MODE_COLOR={air:"var(--alt2)",lcl:"var(--alt1)",f20:"var(--accent)",f40:"var(--accent)",r40:"var(--accent)"};
 function advCtx(R){
   const ls=legs(R.S),ocean=ls.filter(l=>l.id!=="Air"),air=ls.find(l=>l.id==="Air");
-  const c=R.cands,oc=c.filter(p=>p.leg!=="Air"),ac=c.filter(p=>p.leg==="Air");return{oceanCO2:Math.min(...oc.map(p=>p.co2)),airCO2:Math.min(...ac.map(p=>p.co2)),oceanX:Math.min(...ocean.map(l=>l.c))/100,airX:air.c/900,
+  const D={...R.S,e:Object.fromEntries(EVENTS.map(e=>[e.id,e.on]))},ld=legs(D),od=ld.filter(l=>l.id!=="Air"),ad=ld.find(l=>l.id==="Air");
+  const c=R.cands,oc=c.filter(p=>p.leg!=="Air"),ac=c.filter(p=>p.leg==="Air");return{oceanCO2:Math.min(...oc.map(p=>p.co2)),airCO2:Math.min(...ac.map(p=>p.co2)),oceanX:Math.min(...ocean.map(l=>l.c))/Math.min(...od.map(l=>l.c)),airX:air.c/ad.c,
     oceanDays:Math.min(...c.filter(p=>p.leg!=="Air").map(p=>p.d)),airDays:Math.min(...c.filter(p=>p.leg==="Air").map(p=>p.d))};
 }
 function modes(sec,kg,val,due,X){
@@ -656,6 +726,7 @@ function modes(sec,kg,val,due,X){
 const usd=n=>n>=1000?"$"+Math.round(n).toLocaleString():"$"+n.toFixed(n<10?2:0);
 const SIZES=[100,250,500,1000,2500,5000,10000,20000,40000];
 function drawMode(R){
+  if(ratesOrigin!==R.S.O.c&&!ratesEdited)fillRates(R.S.O.c);
   const X=advCtx(R),sec=SECTORS.find(s=>s.id===sel.value),kg=Math.max(10,+$("kg").value||10),val=Math.max(0,+$("val").value||0),due=Math.max(1,+$("due").value||1);
   $("mult").textContent=`ocean ×${X.oceanX.toFixed(2)}, air ×${X.airX.toFixed(2)}`;
   const M=modes(sec,kg,val,due,X),b=M.best;
@@ -683,7 +754,9 @@ function drawMode(R){
 }
 $("matrix").addEventListener("click",e=>{const r=e.target.closest("tr[data-sec]");if(r){loadSector(r.dataset.sec);drawMode(window.__last)}});
 sel.addEventListener("input",()=>{loadSector(sel.value);drawMode(window.__last)});
-["kg","val","due",...RATE_DEF.map(r=>"rate-"+r[0])].forEach(id=>$(id).addEventListener("input",()=>drawMode(window.__last)));
+["kg","val","due"].forEach(id=>$(id).addEventListener("input",()=>drawMode(window.__last)));
+RATE_DEF.forEach(r=>$("rate-"+r[0]).addEventListener("input",()=>{ratesEdited=true;drawMode(window.__last);drawDuties(window.__last)}));
+$("rate-reset").onclick=()=>{fillRates(window.__last.S.O.c);drawMode(window.__last);drawDuties(window.__last)};
 
 // ---------- 3PL table
 [...new Set(TPL.map(t=>t.t))].forEach(t=>$("ftype").add(new Option(t,t)));
@@ -912,14 +985,62 @@ function sbExample(){
 function sbInit(){sbPalette();let cur=null;try{cur=JSON.parse(localStorage.getItem("eb-scenario-current")||"null")}catch(e){}
   sbRefreshSaved();if(cur&&cur.nodes&&cur.nodes.every(n=>CAT[n.id]))SB=cur;else{sbExample();return}sbRender()}
 
+// ---------- tariffs & duties
+const DLAYERS=[["mfn","Base duty (MFN)","var(--leg1)"],["cn301","Section 301 (China lists)","var(--leg2)"],["fl301","Section 301 (forced labor)","var(--leg3)"],["s232","Section 232 (metals)","var(--leg4)"],["fees","Customs fees (MPF, HMF)","var(--s5)"],["freight","Freight","var(--s6)"]];
+(function(){const s=$("d-prod");["Apparel","Food","Defense"].forEach(g=>{const og=document.createElement("optgroup");og.label=g;
+  TARIFFS.products.forEach((p,i)=>{if(p.sector===g)og.append(new Option(`${p.name} (${p.hts})`,i))});s.append(og)});
+  $("d-context").innerHTML=TARIFFS.context.map(c=>`<li>${c}</li>`).join("");})();
+function loadProduct(i){const p=TARIFFS.products[i];$("d-prod").value=i;$("d-mfn").value=p.mfn;$("d-cn301").value=p.cn301;$("d-232").value=p.s232;
+  $("d-note").textContent=(p.adcvd?"Antidumping duties may apply. ":"")+p.note}
+loadProduct(0);
+function dutyFor(c,V,mode,L){const F=TARIFFS.fees,s232=L.s232>0;
+  const o={mfn:V*L.mfn/100,cn301:c==="cn"?V*L.cn301/100:0,fl301:s232?0:V*TARIFFS.countries[c].forced_labor_301/100,s232:V*L.s232/100};
+  o.fees=Math.min(F.mpf_max,Math.max(F.mpf_min,V*F.mpf_rate/100))+(mode==="ocean"?V*F.hmf_rate/100:0);return o}
+function freightFor(c,kg,mode,X){if(mode==="air")return kg*rate("air")*X.airX;
+  const r=c===ratesOrigin?rate("f40"):ratesFor(c).f40;return Math.max(1,Math.ceil(kg/26000))*r*X.oceanX}
+function drawDuties(R){if(!R)return;
+  const X=advCtx(R),V=Math.max(0,+$("d-val").value||0),U=Math.max(1,+$("d-units").value||1),kg=Math.max(1,+$("d-kg").value||1),mode=$("d-mode").value;
+  const L={mfn:Math.max(0,+$("d-mfn").value||0),cn301:Math.max(0,+$("d-cn301").value||0),s232:Math.max(0,+$("d-232").value||0)};
+  const cs=Object.keys(TARIFFS.countries),rows=cs.map(c=>{const d=dutyFor(c,V,mode,L);d.freight=freightFor(c,kg,mode,X);
+    d.duty=d.mfn+d.cn301+d.fl301+d.s232;d.add=d.duty+d.fees+d.freight;d.landed=V+d.add;return{c,name:TARIFFS.countries[c].name,...d}});
+  const best=rows.reduce((a,b)=>a.landed<b.landed?a:b);
+  const $$=n=>"$"+Math.round(n).toLocaleString(),pct=n=>(n*100).toFixed(1)+"%";
+  const line=(l,f,b)=>`<tr><td>${b?`<b>${l}</b>`:l}</td>${rows.map(r=>`<td class="n${r===best&&b?" best":""}">${b?`<b>${f(r)}</b>`:f(r)}</td>`).join("")}</tr>`;
+  $("d-table").innerHTML=`<tr><th>Per shipment</th>${rows.map(r=>`<th>${r.name}${r===best?' <span class="pill" style="border-color:var(--accent);color:var(--accent)">Lowest landed cost</span>':""}</th>`).join("")}</tr>`+
+    line("Goods value (customs value)",r=>$$(V))+
+    DLAYERS.slice(0,4).map(([k,l])=>line(l,r=>r[k]?$$(r[k]):"—")).join("")+
+    line("Customs fees (MPF + HMF)",r=>$$(r.fees))+
+    line("Total duties and fees",r=>$$(r.duty+r.fees),1)+
+    line("Effective duty rate",r=>V?pct((r.duty+r.fees)/V):"—")+
+    line(mode==="air"?`Air freight (${kg.toLocaleString()} kg)`:`Ocean freight (${Math.max(1,Math.ceil(kg/26000))} × 40')`,r=>$$(r.freight))+
+    line("Landed cost",r=>$$(r.landed),1)+
+    line("Landed cost per unit",r=>"$"+(r.landed/U).toFixed(2),1);
+  // stacked bars
+  const svg=$("d-chart");svg.innerHTML="";const W=560,m={l:70,r:16,t:8,b:26},bh=34,gap=18;
+  const max=Math.max(...rows.map(r=>r.add))||1,X2=v=>m.l+v/max*(W-m.l-m.r);
+  const nice=Math.pow(10,Math.floor(Math.log10(max))),step=max/nice>5?nice*2:max/nice>2?nice:nice/2;
+  for(let v=0;v<=max;v+=step){svg.append(el("line",{x1:X2(v),x2:X2(v),y1:m.t,y2:m.t+rows.length*(bh+gap)-gap,stroke:"var(--line)"}));
+    svg.append(el("text",{x:X2(v),y:m.t+rows.length*(bh+gap)-gap+16,"text-anchor":"middle",class:"small"},"$"+(v>=1000?Math.round(v/1000)+"k":v)))}
+  rows.forEach((r,i)=>{const y=m.t+i*(bh+gap);let x=m.l;
+    svg.append(el("text",{x:m.l-8,y:y+bh/2+4,"text-anchor":"end",style:"font-weight:600"},r.name));
+    DLAYERS.forEach(([k,l,col])=>{const v=r[k];if(v<=0)return;const w=Math.max(0,X2(v)-m.l-2);
+      const rc=el("rect",{x,y,width:w,height:bh,fill:col});rc.append(el("title",{},`${r.name} · ${l}: $${Math.round(v).toLocaleString()}`));svg.append(rc);x+=w+2});
+    svg.append(el("text",{x:Math.min(x+6,W-4),y:y+bh/2+4,"text-anchor":x+60>W?"end":"start",class:"small",style:"fill:var(--ink)"},"$"+Math.round(r.add).toLocaleString()))});
+  svg.setAttribute("viewBox",`0 0 ${W} ${m.t+rows.length*(bh+gap)-gap+m.b}`);
+  $("d-legend").innerHTML=DLAYERS.filter(([k])=>rows.some(r=>r[k]>0)).map(([k,l,c])=>`<span><i style="background:${c};height:10px;width:10px"></i>${l}</span>`).join("");
+}
+$("d-prod").addEventListener("input",()=>{loadProduct(+$("d-prod").value);drawDuties(window.__last)});
+["d-val","d-units","d-kg","d-mode","d-mfn","d-cn301","d-232"].forEach(id=>$(id).addEventListener("input",()=>drawDuties(window.__last)));
+
 // ---------- top-level tabs
-const PANES=["planner","advisor","emissions","builder","index","ports","about"];
+const PANES=["planner","advisor","duties","emissions","builder","index","ports","about"];
 function showTab(id){if(!PANES.includes(id))id="planner";
   document.querySelectorAll(".tabpanel").forEach(s=>s.hidden=!s.dataset.tab.split(" ").includes(id));
   document.querySelectorAll(".topnav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.go===id));
   try{history.replaceState(null,"","#"+id)}catch(e){}
   if(id==="planner"&&!$("view-map").hidden&&window.__last)drawMaps(window.__last);
   window.scrollTo(0,0);}
+
 document.querySelectorAll(".topnav button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));
 function scenLine(R){const on=[...EVENTS,...WEATHER].filter(e=>R.S.e[e.id]||R.S.w[e.id]).map(e=>e.t);
   $("scen-line").innerHTML=`Using the route planner's scenario: <b>${R.S.o}</b> → <b>${R.S.destName}</b>, ${MONTHS[+$("month").value-1]}. Active: ${on.length?on.join(", "):"none"}. <a id="go-planner">Change scenario</a>`;

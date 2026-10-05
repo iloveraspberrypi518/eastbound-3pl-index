@@ -1,0 +1,37 @@
+{
+  "as_of": "2026-10-05",
+  "fees": {
+    "mpf_rate": 0.3464, "mpf_min": 34.58, "mpf_max": 670.86, "mpf_note": "FY2027 limits, entries on or after Oct 1, 2026",
+    "hmf_rate": 0.125, "hmf_note": "Ocean cargo only"
+  },
+  "countries": {
+    "cn": {"name": "China", "forced_labor_301": 12.5},
+    "vn": {"name": "Vietnam", "forced_labor_301": 12.5},
+    "in": {"name": "India", "forced_labor_301": 10}
+  },
+  "products": [
+    {"sector": "Apparel", "hts": "6109.10.00", "name": "Cotton knit T-shirts", "mfn": 16.5, "cn301": 7.5, "s232": 0, "note": "China Section 301 List 4A."},
+    {"sector": "Apparel", "hts": "6203.42.40", "name": "Men's cotton trousers", "mfn": 16.6, "cn301": 7.5, "s232": 0, "note": "China Section 301 List 4A."},
+    {"sector": "Apparel", "hts": "6110.30.30", "name": "Synthetic-fiber sweaters", "mfn": 32, "cn301": 7.5, "s232": 0, "note": "China Section 301 List 4A."},
+    {"sector": "Food", "hts": "0306.17", "name": "Frozen shrimp and prawns", "mfn": 0, "cn301": 25, "s232": 0, "adcvd": true, "note": "Antidumping duties on frozen warmwater shrimp from China, India and Vietnam may apply. China 301 rate: verify."},
+    {"sector": "Food", "hts": "0904.11", "name": "Black pepper, whole", "mfn": 0, "cn301": 25, "s232": 0, "note": "China 301 rate: verify."},
+    {"sector": "Food", "hts": "1905.90", "name": "Baked goods (bread, pastry, biscuits)", "mfn": 0, "cn301": 25, "s232": 0, "note": "FDA Prior Notice required. China 301 rate: verify."},
+    {"sector": "Defense", "hts": "8542.31", "name": "Processors and controllers (ICs)", "mfn": 0, "cn301": 50, "s232": 0, "note": "China 301 raised to 50% in the 2024 review. A 25% Section 232 duty hits certain logic ICs, with wide exemptions. ITAR/EAR may apply."},
+    {"sector": "Defense", "hts": "7208", "name": "Hot-rolled steel plate", "mfn": 0, "cn301": 25, "s232": 50, "note": "Section 232 steel at 50%. Section 232 goods are exempt from the forced-labor 301 duty."},
+    {"sector": "Defense", "hts": "7616.99", "name": "Aluminum parts and articles", "mfn": 2.5, "cn301": 25, "s232": 50, "note": "Section 232 aluminum derivative. Verify that the HTS line is in scope."}
+  ],
+  "context": [
+    "IEEPA tariffs were struck down by the Supreme Court on Feb 20, 2026. Refunds run through CBP's CAPE program.",
+    "The temporary Section 122 surcharge expired on Jul 24, 2026.",
+    "Section 301 forced-labor duties of 10% or 12.5% took effect on Jul 24, 2026 for 60 economies.",
+    "The US-China trade truce, covering some 301 exclusions and port fees, was extended to Jan 10, 2027.",
+    "De minimis duty-free entry has been suspended since Aug 29, 2025."
+  ],
+  "sources": [
+    {"name": "EY Tax News, USTR finalizes Section 301 forced labor tariffs", "url": "https://taxnews.ey.com/news/2026-1607-ustr-finalizes-section-301-forced-labor-tariffs-on-60-economies-additional-tariffs-of-10-percent-or-125-percent-take-effect-24-july-2026"},
+    {"name": "Global Trade Alert, forced-labour Section 301 final action", "url": "https://globaltradealert.org/blog/forced-labour-section-301-final-action"},
+    {"name": "Dimerco, US Tariff Update 2026 (Sept 28, 2026)", "url": "https://dimerco.com/us-tariff-update-2026/"},
+    {"name": "Borderless, MPF changes Oct 1, 2026", "url": "https://borderless.us/guides/mpf-changes-october-1-2026"},
+    {"name": "Trading Economics, US-China truce extended to Jan 10", "url": "https://tradingeconomics.com/united-states/balance-of-trade/news/586352"}
+  ]
+}
