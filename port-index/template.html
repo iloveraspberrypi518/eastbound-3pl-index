@@ -93,6 +93,23 @@ input[type=number]{font:14px var(--mono);padding:6px 8px;border:1px solid var(--
 #e-scatter circle{stroke:var(--panel);stroke-width:2}
 .callout{border:1px solid var(--line);border-radius:4px;padding:10px 12px;display:grid;gap:4px;font-size:14px}
 .ebar{height:10px;border-radius:0 4px 4px 0;display:block}
+.sb{display:grid;grid-template-columns:220px minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:760px){.sb{grid-template-columns:1fr}}
+.palette{display:grid;gap:8px;max-height:560px;overflow:auto;padding-right:4px}
+.palette details{border:1px solid var(--line);border-radius:4px;padding:6px 8px}
+.palette summary{font:600 13px var(--display);cursor:pointer}
+.palette .items{display:grid;gap:4px;margin-top:6px}
+.palette button{font:13px var(--body);text-align:left;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-left:4px solid var(--k);border-radius:3px;padding:5px 8px;cursor:grab}
+.palette button:disabled{opacity:.45;cursor:default}
+#sb-canvas{width:100%;height:auto;background:var(--sea);border:1px solid var(--line);border-radius:4px;touch-action:none;user-select:none;-webkit-user-select:none}
+#sb-canvas .node{cursor:move}
+#sb-canvas .handle{cursor:crosshair}
+#sb-canvas .hit{stroke:transparent;stroke-width:14;fill:none;cursor:pointer}
+.sb-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sb-bar button,.sb-sel button{font:13px var(--body);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:5px 10px;cursor:pointer}
+.sb-bar input[type=text]{font:13px var(--body);padding:5px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);width:160px}
+.sb-sel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:32px;font-size:14px}
+.sb-msg{font-size:13px;color:var(--bad);min-height:18px}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th{text-align:left;font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 10px;white-space:nowrap}
 td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
@@ -108,7 +125,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 
 <div class="wrap">
 <header>
-  <div class="lbl">East Coast prototype · v0.5 · news as of Oct 5, 2026</div>
+  <div class="lbl">East Coast prototype · v0.6 · news as of Oct 5, 2026</div>
   <h1>Eastbound 3PL Index</h1>
   <p class="sub">Find 3PLs near East Coast ports, then trace a shipment from the factory to a 3PL or straight to your showroom. Routes react to world events, the season, and what other shippers are likely to do.</p>
 </header>
@@ -117,12 +134,13 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
   <button role="tab" data-go="planner">Route planner</button>
   <button role="tab" data-go="advisor">Mode advisor</button>
   <button role="tab" data-go="emissions">Emissions</button>
+  <button role="tab" data-go="builder">Scenario builder</button>
   <button role="tab" data-go="index">3PL index</button>
   <button role="tab" data-go="ports">Ports</button>
   <button role="tab" data-go="about">About &amp; sources</button>
 </nav>
 
-<p class="scenario-line tabpanel" data-tab="advisor emissions" id="scen-line"></p>
+<p class="scenario-line tabpanel" data-tab="advisor emissions builder" id="scen-line"></p>
 
 <section class="tabpanel" data-tab="planner">
   <h2>Shipment journey</h2>
@@ -230,6 +248,34 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
     <div><h3>All route options</h3><p class="note" style="margin:2px 0 8px">Sorted cleanest first. Bars are scaled to the dirtiest ocean option. Air runs off the scale.</p>
     <div class="scroll"><table id="e-table"></table></div></div>
     <p class="note">Factors used: container ship 14 g, long-haul air freighter 608 g, and articulated truck 87 g CO₂e per tonne-km. Ocean distance is measured along the drawn sea lane, and air distance is great-circle + 95 km. Refrigerated containers add about 30%. Factory-to-port trucking is left out because it's the same for every option. Real figures vary with vessel size, load factor and speed (slow steaming cuts fuel burn).</p>
+  </div>
+</section>
+
+<section class="tabpanel" data-tab="builder">
+  <h2>Scenario builder</h2>
+  <p class="note">Build your own network. Drag factories, ports, airports, 3PL hubs and showrooms onto the canvas, or click to add them. To connect two places, drag from a node's right-hand dot onto another node. Click an ocean link to choose Panama, Suez or the Cape. Every complete path from a factory to a showroom is scored below.</p>
+  <div class="panel">
+    <div class="sb-bar">
+      <button id="sb-example">Load example</button>
+      <button id="sb-clear">Clear canvas</button>
+      <span style="flex:1"></span>
+      <input type="text" id="sb-name" placeholder="Scenario name" aria-label="Scenario name">
+      <button id="sb-save">Save</button>
+      <select id="sb-saved" aria-label="Saved scenarios"><option value="">Saved scenarios…</option></select>
+      <button id="sb-load">Open</button>
+      <button id="sb-del">Delete</button>
+    </div>
+    <div class="sb">
+      <div class="palette" id="sb-palette"></div>
+      <div style="display:grid;gap:8px">
+        <svg id="sb-canvas" viewBox="0 0 960 540" role="application" aria-label="Scenario canvas"></svg>
+        <div class="sb-msg" id="sb-msg" role="status"></div>
+        <div class="sb-sel" id="sb-sel"><span class="note">Click a node or link to edit it. Press Delete to remove the selected item.</span></div>
+      </div>
+    </div>
+    <div><h3>Paths in this scenario</h3><p class="note" style="margin:2px 0 8px">Ranked with the route planner's speed, cost, risk and emissions settings. The best path is drawn thicker on the canvas. Crowding isn't modeled here.</p>
+      <div class="scroll"><table id="sb-paths"></table></div></div>
+    <p class="note">Saved scenarios stay in this browser only. Links: factory → origin port or airport → US port or airport → 3PL hub(s) → showroom. A US port or airport can also go straight to a showroom.</p>
   </div>
 </section>
 
@@ -535,7 +581,7 @@ function drawMaps({S,top}){
 function card(p,i,label){return`<div class="route" style="--c:${COLORS[i]}"><span class="lbl">${label}</span>
   <b>${p.leg==="Air"?"Air":"Ocean via "+(p.leg==="Cape"?"Cape of Good Hope":p.leg)} → ${p.g.name}</b>
   <span class="path">${p.h?"3PL hub: "+p.h:"Direct to showroom"} → ${$("dest").value}</span>
-  <span class="nums">≈${p.dd} days${p.x>=0.5?` (incl. +${Math.round(p.x)} crowding)`:""} · cost index ${p.cc} · risk ${p.r}/10<br>${Math.round(p.co2)} kg CO₂e per tonne</span></div>`}
+  <span class="nums">≈${p.dd} days${p.x>=0.5?` (incl. +${Math.round(p.x)} crowding)`:""} · cost index ${p.cc} · risk ${Math.min(10,p.r)}/10<br>${Math.round(p.co2)} kg CO₂e per tonne</span></div>`}
 function drawCrowd({S,eq,naive,crowded}){
   const share={};eq.R.forEach((r,i)=>share[r.g.id]=(share[r.g.id]||0)+eq.x[i]);
   const ids=[...PORTS.filter(p=>p.gw),...AIR].sort((a,b)=>(share[b.id]||0)-(share[a.id]||0));
@@ -553,7 +599,7 @@ function drawCrowd({S,eq,naive,crowded}){
 function render(){
   const R=solve();
   $("routes").innerHTML=R.top.map((p,i)=>card(p,i,["Best match","Alternative","Alternative"][i])).join("");
-  drawGraph(R);drawCrowd(R);drawMode(R);drawEmissions(R);scenLine(R);if(!$("view-map").hidden)drawMaps(R);
+  drawGraph(R);drawCrowd(R);drawMode(R);drawEmissions(R);scenLine(R);if(typeof sbRender==="function"&&SB)sbRender();if(!$("view-map").hidden)drawMaps(R);
   window.__last=R;
 }
 ["origin","tpl","dest","wt","wr","we","crowdOn","crowd","crowdPref"].forEach(id=>$(id).addEventListener("input",render));
@@ -723,8 +769,151 @@ function drawEmissions(R){
 }
 ["e-t","e-price"].forEach(id=>$(id).addEventListener("input",()=>drawEmissions(window.__last)));
 
+// ---------- scenario builder
+const CAT={};
+const addCat=(id,k,label,ll,x)=>CAT[id]={id,k,label,ll,...x};
+Object.entries(ORIGINS).forEach(([n,o])=>{const city=n.split(",")[0];
+  addCat("F-"+o.c,"factory","Factory: "+city,o.portLL,{origin:n});
+  addCat("OP-"+o.c,"oport","Port: "+o.port,o.portLL,{origin:n});
+  addCat("OA-"+o.c,"oair","Airport: "+o.air,o.airLL,{origin:n})});
+PORTS.forEach(p=>addCat("UP-"+p.id,"usport",p.name.replace(" (Norfolk)",""),p.ll,{g:p}));
+AIR.forEach(a=>addCat("UA-"+a.id,"usair",a.name,a.ll,{g:a}));
+Object.entries(METRO).forEach(([m,ll])=>addCat("H-"+m,"hub","3PL hub: "+m,ll,{tpls:TPL.filter(t=>t.m.includes(m)).map(t=>t.n)}));
+Object.entries(DEST).forEach(([d,ll])=>addCat("D-"+d,"dest","Showroom: "+d,ll,{}));
+const KINDS={factory:"Factories",oport:"Origin ports",oair:"Origin airports",usport:"US ports",usair:"US airports",hub:"3PL hubs",dest:"Showrooms / studios"};
+const KCOL={factory:"var(--muted)",oport:"var(--leg1)",oair:"var(--leg4)",usport:"var(--leg1)",usair:"var(--leg4)",hub:"var(--accent)",dest:"var(--ink)"};
+const ALLOW={factory:["oport","oair"],oport:["usport"],oair:["usair"],usport:["hub","dest"],usair:["hub","dest"],hub:["hub","dest"],dest:[]};
+const NW=158,NH=36;
+let SB={nodes:[],edges:[]},sbSel=null,sbBest=new Set();
+const sbNode=id=>SB.nodes.find(n=>n.id===id);
+function sbMsg(m){$("sb-msg").textContent=m||""}
+function canLink(a,b){const A=CAT[a],B=CAT[b];
+  if(a===b)return"A node can't link to itself.";
+  if(!ALLOW[A.k].includes(B.k))return`${A.label} can't link to ${B.label}. Links run factory → origin port/airport → US port/airport → 3PL hub → showroom.`;
+  if((A.k==="factory")&&A.origin!==B.origin)return"A factory ships through its own region's port or airport.";
+  if(SB.edges.some(e=>e.a===a&&e.b===b))return"Those two are already linked.";
+  return null}
+function edgeCalc(e,S){
+  const A=CAT[e.a],B=CAT[e.b];
+  if(A.k==="factory")return{mode:"truck",d:1,c:2,r:0,co2:9};
+  if(A.k==="oport"||A.k==="oair"){
+    const SS={...S,O:ORIGINS[A.origin]},air=A.k==="oair",L=legs(SS).find(l=>l.id===(air?"Air":e.via)),x=gwWeather(B.g.id,S.w);
+    const km=pathKm(lane({leg:L.id,g:B.g},SS))+(air?95:0);
+    return{mode:air?"air":"ocean",leg:L.id,d:L.d+(PORTADJ[L.id]?.[B.g.id]||0)+(air?1:3)+x.d,c:L.c+(air?5:12)+2,r:L.r+x.r,co2:km*(air?EF.air:EF.ocean)/1000,km:Math.round(km)};
+  }
+  const mi=road(A.ll,B.ll),tr=truck(mi),hub=B.k==="hub";
+  return{mode:"truck",d:tr.d+(hub?2:0),c:tr.c+(hub?10:0),r:0,co2:mi*1.609*EF.truck/1000,mi};
+}
+function sbPaths(S){
+  const calc={};SB.edges.forEach(e=>calc[e.a+"|"+e.b]=edgeCalc(e,S));
+  const out=[];
+  const walk=(id,trail,seen)=>{if(CAT[id].k==="dest"){out.push(trail);return}
+    SB.edges.filter(e=>e.a===id&&!seen.has(e.b)).forEach(e=>walk(e.b,[...trail,e],new Set([...seen,e.b])))};
+  SB.nodes.filter(n=>CAT[n.id].k==="factory").forEach(n=>walk(n.id,[],new Set([n.id])));
+  const paths=out.map(tr=>{const cs=tr.map(e=>calc[e.a+"|"+e.b]);
+    return{edges:tr,ids:[tr[0].a,...tr.map(e=>e.b)],d:cs.reduce((s,c)=>s+c.d,0),c:Math.round(cs.reduce((s,c)=>s+c.c,0)),r:Math.min(10,Math.max(...cs.map(c=>c.r))),co2:cs.reduce((s,c)=>s+c.co2,0),main:cs.find(c=>c.mode!=="truck")}});
+  if(paths.length){const N={md:Math.max(...paths.map(p=>p.d)),mc:Math.max(...paths.map(p=>p.c))};paths.forEach(p=>p.s=score(p,0,N,S));paths.sort((a,b)=>a.s-b.s)}
+  return{paths,calc};
+}
+function sbSave(){try{localStorage.setItem("eb-scenario-current",JSON.stringify(SB))}catch(e){}}
+function sbSavedAll(){try{return JSON.parse(localStorage.getItem("eb-scenarios")||"{}")}catch(e){return{}}}
+function sbRefreshSaved(){const all=sbSavedAll(),s=$("sb-saved");s.innerHTML='<option value="">Saved scenarios…</option>';Object.keys(all).sort().forEach(k=>s.add(new Option(k,k)))}
+function sbPalette(){
+  $("sb-palette").innerHTML=Object.entries(KINDS).map(([k,n])=>`<details ${["factory","usport","hub","dest"].includes(k)?"open":""}><summary>${n}</summary><div class="items">${
+    Object.values(CAT).filter(c=>c.k===k).map(c=>`<button draggable="true" data-cat="${c.id}" style="--k:${KCOL[k]}" ${sbNode(c.id)?"disabled":""} title="${c.tpls?c.tpls.length?"3PLs here: "+c.tpls.join(", "):"No indexed 3PLs here":c.label}">${c.label.replace(/^(Factory|Port|Airport|3PL hub|Showroom): /,"")}</button>`).join("")}</div></details>`).join("");
+}
+function sbAdd(id,x,y){if(sbNode(id))return;
+  if(x==null){const k=Object.keys(KINDS).indexOf(CAT[id].k);x=20+k*135;y=30+SB.nodes.filter(n=>CAT[n.id].k===CAT[id].k).length*52}
+  SB.nodes.push({id,x:Math.max(4,Math.min(960-NW-14,x)),y:Math.max(4,Math.min(540-NH-4,y))});sbSel={t:"n",id};sbMsg("");sbRender()}
+function sbRender(){
+  const S=scenario(),{paths,calc}=sbPaths(S),best=paths[0];
+  sbBest=new Set(best?best.edges.map(e=>e.a+"|"+e.b):[]);
+  const svg=$("sb-canvas");svg.innerHTML="";
+  if(!SB.nodes.length){svg.append(el("text",{x:480,y:260,"text-anchor":"middle",style:"fill:var(--muted);font-size:15px"},"Drag places here from the list, or click one to add it."))}
+  const pos=id=>sbNode(id);
+  SB.edges.forEach(e=>{const A=pos(e.a),B=pos(e.b),c=calc[e.a+"|"+e.b];if(!A||!B)return;
+    const x1=A.x+NW,y1=A.y+NH/2,x2=B.x,y2=B.y+NH/2,mx=(x1+x2)/2,d=`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+    const col=c.mode==="truck"?"var(--muted)":LEGC[c.leg],on=sbBest.has(e.a+"|"+e.b),sel=sbSel&&sbSel.t==="e"&&sbSel.a===e.a&&sbSel.b===e.b;
+    svg.append(el("path",{d,fill:"none",stroke:col,"stroke-width":on?4:sel?3:2,"stroke-dasharray":c.mode==="truck"?"5 4":c.mode==="air"?"2 3":""}));
+    const lab=(c.mode==="ocean"?(c.leg==="Cape"?"Cape":c.leg)+" · ":c.mode==="air"?"Air · ":"")+c.d+"d";
+    const lx=(x1+x2)/2,ly=(y1+y2)/2-6;svg.append(el("text",{x:lx,y:ly,"text-anchor":"middle",class:"small",style:"fill:var(--ink);paint-order:stroke;stroke:var(--sea);stroke-width:3px"},lab));
+    const hit=el("path",{d,class:"hit"});hit.dataset.edge=e.a+"|"+e.b;svg.append(hit)});
+  SB.nodes.forEach(n=>{const C=CAT[n.id],sel=sbSel&&sbSel.t==="n"&&sbSel.id===n.id;
+    const g=el("g",{class:"node",transform:`translate(${n.x},${n.y})`});g.dataset.node=n.id;
+    g.append(el("rect",{width:NW,height:NH,rx:4,fill:"var(--panel)",stroke:sel?"var(--ink)":"var(--line)","stroke-width":sel?2:1}));
+    g.append(el("rect",{width:4,height:NH,fill:KCOL[C.k]}));
+    g.append(el("text",{x:10,y:14,class:"small"},KINDS[C.k].replace(/s$/,"").replace("Showrooms / studio","Showroom").toUpperCase()));
+    const nm=C.label.replace(/^(Factory|Port|Airport|3PL hub|Showroom): /,"");
+    g.append(el("text",{x:10,y:29,style:"font-weight:600"},nm.length>21?nm.slice(0,20)+"…":nm));
+    if(ALLOW[C.k].length){const h=el("circle",{cx:NW,cy:NH/2,r:7,fill:"var(--accent)",stroke:"var(--panel)","stroke-width":2,class:"handle"});h.dataset.handle=n.id;g.append(h)}
+    svg.append(g)});
+  // selection panel
+  const sp=$("sb-sel");
+  if(sbSel&&sbSel.t==="e"){const e=SB.edges.find(x=>x.a===sbSel.a&&x.b===sbSel.b),c=calc[e.a+"|"+e.b];
+    sp.innerHTML=`<b>${CAT[e.a].label} → ${CAT[e.b].label}</b><span class="nums">${c.d} days · cost ${Math.round(c.c)} · ${Math.round(c.co2)} kg CO₂e/t</span>`+
+      (c.mode==="ocean"?`<label>Route <select id="sb-via">${["Panama","Suez","Cape"].map(v=>`<option value="${v}" ${e.via===v?"selected":""}>${legName(v)}</option>`).join("")}</select></label>`:"")+`<button id="sb-rm">Delete link</button>`;
+    if($("sb-via"))$("sb-via").oninput=ev=>{e.via=ev.target.value;sbSave();sbRender()};
+  }else if(sbSel&&sbSel.t==="n"&&sbNode(sbSel.id)){const C=CAT[sbSel.id];
+    sp.innerHTML=`<b>${C.label}</b>${C.tpls?`<span class="note">${C.tpls.length?"3PLs here: "+C.tpls.join(", "):"No indexed 3PLs here yet"}</span>`:""}<button id="sb-rm">Remove from canvas</button>`;
+  }else sp.innerHTML=`<span class="note">Click a node or link to edit it. Press Delete to remove the selected item.</span>`;
+  if($("sb-rm"))$("sb-rm").onclick=sbRemove;
+  // paths table
+  const lab=id=>CAT[id].label.replace(/^(3PL hub|Showroom): /,"");
+  $("sb-paths").innerHTML=paths.length?`<tr><th></th><th>Path</th><th>Main leg</th><th>Days</th><th>Cost index</th><th>Risk</th><th>kg CO₂e/t</th></tr>`+paths.map((p,i)=>`<tr><td>${i===0?'<span class="pill" style="border-color:var(--accent);color:var(--accent)">Best</span>':i+1}</td><td>${p.ids.map(lab).join(" → ")}</td><td>${p.main?(p.main.mode==="air"?"Air":legName(p.main.leg)):"—"}</td><td class="n">${p.d}</td><td class="n">${p.c}</td><td class="n">${p.r}/10</td><td class="n">${Math.round(p.co2)}</td></tr>`).join("")
+    :`<tr><td class="note">No complete path yet. Link a factory all the way through to a showroom and the paths will appear here.</td></tr>`;
+  document.querySelectorAll("#sb-palette [data-cat]").forEach(b=>b.disabled=!!sbNode(b.dataset.cat));
+}
+function sbRemove(){if(!sbSel)return;
+  if(sbSel.t==="n"){SB.nodes=SB.nodes.filter(n=>n.id!==sbSel.id);SB.edges=SB.edges.filter(e=>e.a!==sbSel.id&&e.b!==sbSel.id)}
+  else SB.edges=SB.edges.filter(e=>!(e.a===sbSel.a&&e.b===sbSel.b));
+  sbSel=null;sbSave();sbRender()}
+function sbExample(){
+  SB={nodes:[{id:"F-cn",x:16,y:220},{id:"OP-cn",x:200,y:150},{id:"OA-cn",x:200,y:330},{id:"UP-NYNJ",x:400,y:80},{id:"UP-SAV",x:400,y:220},{id:"UA-JFK",x:400,y:380},
+    {id:"H-Central NJ",x:600,y:110},{id:"H-Atlanta GA",x:600,y:250},{id:"D-New York City",x:790,y:230}],
+   edges:[{a:"F-cn",b:"OP-cn"},{a:"F-cn",b:"OA-cn"},{a:"OP-cn",b:"UP-NYNJ",via:"Panama"},{a:"OP-cn",b:"UP-SAV",via:"Suez"},{a:"OA-cn",b:"UA-JFK"},
+    {a:"UP-NYNJ",b:"H-Central NJ"},{a:"UP-SAV",b:"H-Atlanta GA"},{a:"H-Central NJ",b:"D-New York City"},{a:"H-Atlanta GA",b:"D-New York City"},{a:"UA-JFK",b:"D-New York City"}]};
+  sbSel=null;sbMsg("");sbSave();sbRender()}
+// pointer interaction: drag nodes, drag from handle to link
+(function(){
+  const svg=$("sb-canvas");let drag=null;
+  const pt=ev=>{const m=svg.getScreenCTM();return m?new DOMPoint(ev.clientX,ev.clientY).matrixTransform(m.inverse()):{x:0,y:0}};
+  const nodeAt=p=>SB.nodes.find(n=>p.x>=n.x&&p.x<=n.x+NW&&p.y>=n.y&&p.y<=n.y+NH);
+  svg.addEventListener("pointerdown",ev=>{const p=pt(ev),h=ev.target.closest("[data-handle]"),g=ev.target.closest("[data-node]"),ed=ev.target.closest("[data-edge]");
+    if(h){drag={t:"link",from:h.dataset.handle};svg.setPointerCapture(ev.pointerId);ev.preventDefault();return}
+    if(g){const n=sbNode(g.dataset.node);drag={t:"move",n,dx:p.x-n.x,dy:p.y-n.y,moved:false};svg.setPointerCapture(ev.pointerId);ev.preventDefault();return}
+    if(ed){const[a,b]=ed.dataset.edge.split("|");sbSel={t:"e",a,b};sbRender();return}
+    sbSel=null;sbRender()});
+  svg.addEventListener("pointermove",ev=>{if(!drag)return;const p=pt(ev);
+    if(drag.t==="move"){drag.n.x=Math.max(4,Math.min(960-NW-14,p.x-drag.dx));drag.n.y=Math.max(4,Math.min(540-NH-4,p.y-drag.dy));drag.moved=true;
+      const g=svg.querySelector(`[data-node="${CSS.escape(drag.n.id)}"]`);if(g)g.setAttribute("transform",`translate(${drag.n.x},${drag.n.y})`);
+      drag.raf||(drag.raf=requestAnimationFrame(()=>{drag&&(drag.raf=0);sbRender()}))}
+    else{let tl=svg.querySelector("#sb-temp");const A=sbNode(drag.from);if(!tl){tl=el("line",{id:"sb-temp",stroke:"var(--accent)","stroke-width":2,"stroke-dasharray":"4 3"});svg.append(tl)}
+      tl.setAttribute("x1",A.x+NW);tl.setAttribute("y1",A.y+NH/2);tl.setAttribute("x2",p.x);tl.setAttribute("y2",p.y)}});
+  const end=ev=>{if(!drag)return;const d=drag;drag=null;const p=pt(ev);
+    if(d.t==="move"){if(!d.moved)sbSel={t:"n",id:d.n.id};sbSave();sbRender();return}
+    const tgt=nodeAt(p);if(!tgt){sbRender();return}
+    const why=canLink(d.from,tgt.id);if(why){sbMsg(why);sbRender();return}
+    const e={a:d.from,b:tgt.id};if(CAT[d.from].k==="oport")e.via="Panama";
+    SB.edges.push(e);sbSel={t:"e",a:e.a,b:e.b};sbMsg("");sbSave();sbRender()};
+  svg.addEventListener("pointerup",end);svg.addEventListener("pointercancel",()=>{drag=null;sbRender()});
+  // palette: click to add, or drag onto the canvas
+  $("sb-palette").addEventListener("click",ev=>{const b=ev.target.closest("[data-cat]");if(b&&!b.disabled)sbAdd(b.dataset.cat)});
+  $("sb-palette").addEventListener("dragstart",ev=>{const b=ev.target.closest("[data-cat]");if(b)ev.dataTransfer.setData("text/plain",b.dataset.cat)});
+  svg.addEventListener("dragover",ev=>ev.preventDefault());
+  svg.addEventListener("drop",ev=>{ev.preventDefault();const id=ev.dataTransfer.getData("text/plain");if(CAT[id]){const p=pt(ev);sbAdd(id,p.x-NW/2,p.y-NH/2)}});
+  document.addEventListener("keydown",ev=>{if((ev.key==="Delete"||ev.key==="Backspace")&&sbSel&&!["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName)&&!document.querySelector('[data-tab="builder"]').hidden){ev.preventDefault();sbRemove()}});
+  $("sb-example").onclick=sbExample;
+  $("sb-clear").onclick=()=>{SB={nodes:[],edges:[]};sbSel=null;sbSave();sbRender()};
+  $("sb-save").onclick=()=>{const n=$("sb-name").value.trim();if(!n){sbMsg("Give the scenario a name first.");return}
+    const all=sbSavedAll();all[n]=SB;try{localStorage.setItem("eb-scenarios",JSON.stringify(all));sbMsg("");sbRefreshSaved();$("sb-saved").value=n}catch(e){sbMsg("This browser isn't allowing saved data, so the scenario wasn't saved.")}};
+  $("sb-load").onclick=()=>{const n=$("sb-saved").value,all=sbSavedAll();if(!all[n])return;SB=JSON.parse(JSON.stringify(all[n]));$("sb-name").value=n;sbSel=null;sbSave();sbRender()};
+  $("sb-del").onclick=()=>{const n=$("sb-saved").value,all=sbSavedAll();if(!all[n])return;delete all[n];try{localStorage.setItem("eb-scenarios",JSON.stringify(all))}catch(e){}sbRefreshSaved()};
+})();
+function sbInit(){sbPalette();let cur=null;try{cur=JSON.parse(localStorage.getItem("eb-scenario-current")||"null")}catch(e){}
+  sbRefreshSaved();if(cur&&cur.nodes&&cur.nodes.every(n=>CAT[n.id]))SB=cur;else{sbExample();return}sbRender()}
+
 // ---------- top-level tabs
-const PANES=["planner","advisor","emissions","index","ports","about"];
+const PANES=["planner","advisor","emissions","builder","index","ports","about"];
 function showTab(id){if(!PANES.includes(id))id="planner";
   document.querySelectorAll(".tabpanel").forEach(s=>s.hidden=!s.dataset.tab.split(" ").includes(id));
   document.querySelectorAll(".topnav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.go===id));
@@ -736,5 +925,5 @@ function scenLine(R){const on=[...EVENTS,...WEATHER].filter(e=>R.S.e[e.id]||R.S.
   $("scen-line").innerHTML=`Using the route planner's scenario: <b>${R.S.o}</b> → <b>${R.S.destName}</b>, ${MONTHS[+$("month").value-1]}. Active: ${on.length?on.join(", "):"none"}. <a id="go-planner">Change scenario</a>`;
   $("go-planner").onclick=()=>showTab("planner");}
 
-render();table();showTab((location.hash||"#planner").slice(1));
+sbInit();render();table();showTab((location.hash||"#planner").slice(1));
 </script>

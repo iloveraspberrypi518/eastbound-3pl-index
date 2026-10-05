@@ -13,7 +13,7 @@ A free tool for retailers who import goods into the US East Coast. It answers tw
 
 ## What it does today
 
-The site has six tabs: **Route planner**, **Mode advisor**, **Emissions**, **3PL index**, **Ports**, and **About & sources**. Each tab has its own link, for example `.../port-index/#advisor`.
+The site has seven tabs: **Route planner**, **Mode advisor**, **Emissions**, **Scenario builder**, **3PL index**, **Ports**, and **About & sources**. Each tab has its own link, for example `.../port-index/#advisor`.
 
 ### Shipment journey
 Pick a factory region (Shanghai, Ho Chi Minh City or Mumbai), a 3PL, and a final stop. The final stop can be a showroom or studio, with the option to skip the 3PL entirely. The planner compares every path and highlights the best route plus two alternatives:
@@ -51,6 +51,9 @@ Which route puts the least carbon in the air? Every route option is scored in kg
 - a full table of options, cleanest first
 
 An **Emissions priority** slider in the route planner lets carbon steer the recommended route. The mode advisor also shows the emissions of each recommendation.
+
+### Scenario builder
+Build your own network. Drag factories, origin ports and airports, US ports and airports, 3PL hubs and showrooms onto a canvas, then connect them by dragging from one node to another. Ocean links let you choose Panama, Suez or the Cape. Every complete factory-to-showroom path is scored for days, cost, risk and CO₂e, using the route planner's scenario and priorities, and the best path is highlighted. Scenarios can be saved by name in your browser.
 
 ### 3PL index and ports
 - **3PLs:** 14 providers, including DHL Supply Chain, Ryder, GXO, NFI, GEODIS, Kenco, DSV, Saddle Creek, Flexport, ShipBob, ShipMonk, Red Stag and Stord. The index shows warehouse square footage, East Coast hub cities, and nearest port. You can filter by type or by port.
