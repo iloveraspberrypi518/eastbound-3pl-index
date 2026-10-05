@@ -59,6 +59,23 @@ svg .small{font:500 10px var(--mono);fill:var(--muted)}
 .bar .nums{font-size:12px;text-align:right}
 .verdict{display:grid;gap:8px;font-size:14px}
 .verdict .row{display:grid;gap:2px;padding:8px 10px;border:1px solid var(--line);border-radius:4px}
+.adv{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px}
+@media (max-width:760px){.adv{grid-template-columns:1fr}}
+.rec{border:1px solid var(--accent);border-radius:4px;padding:12px;display:grid;gap:4px}
+.rec .big{font:800 22px/1.1 var(--display)}
+.strip{display:flex;height:26px;border-radius:3px;overflow:hidden;border:1px solid var(--line)}
+.strip span{display:flex;align-items:center;justify-content:center;font:500 11px var(--mono);color:#fff;white-space:nowrap;overflow:hidden;min-width:0}
+.strip-ax{display:flex;justify-content:space-between;font:500 10px var(--mono);color:var(--muted)}
+td.best{background:color-mix(in srgb,var(--accent) 14%,transparent);font-weight:600}
+td.off{color:var(--muted)}
+.tag{font:500 10px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--bad)}
+.matrix td{white-space:nowrap}
+.flags{margin:0;padding-left:18px;font-size:13px;color:var(--muted);display:grid;gap:4px}
+details summary{cursor:pointer;font:600 14px var(--display)}
+.rates{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:10px}
+.rates label{display:grid;gap:3px}
+.rates input{width:90px;font:13px var(--mono);padding:5px 6px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
+input[type=number]{font:14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);width:110px}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th{text-align:left;font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 10px;white-space:nowrap}
 td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
@@ -74,7 +91,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 
 <div class="wrap">
 <header>
-  <div class="lbl">East Coast prototype · v0.2 · news as of Oct 5, 2026</div>
+  <div class="lbl">East Coast prototype · v0.3 · news as of Oct 5, 2026</div>
   <h1>Eastbound 3PL Index</h1>
   <p class="sub">Find 3PLs near East Coast ports, then trace a shipment from the factory to a 3PL or straight to your showroom. Routes react to world events, the season, and what other shippers are likely to do.</p>
 </header>
@@ -124,6 +141,37 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
       <div><h3>Your move</h3><div class="verdict" id="verdict" style="margin-top:10px"></div></div>
     </div>
     <p class="note">Capacity is scaled from 2025 port volume where known. Charleston, Norfolk, Jacksonville and airport capacities are placeholder assumptions.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Mode advisor</h2>
+  <p class="note">Should this shipment fly or sail, and in what kind of container? The advisor compares total logistics cost per kg: freight, plus the cost of inventory sitting in transit. Modes that miss your deadline or the product's shelf life are ruled out. It uses the factory region, destination and scenarios set above.</p>
+  <div class="panel">
+    <div class="controls">
+      <label><span class="lbl">Sector</span><select id="sec"></select></label>
+      <label><span class="lbl">Shipment weight (kg)</span><input type="number" id="kg" min="10" step="10" value="2500"></label>
+      <label><span class="lbl">Cargo value ($/kg)</span><input type="number" id="val" min="0.5" step="0.5"></label>
+      <label><span class="lbl">Needed within (days)</span><input type="number" id="due" min="3" step="1"></label>
+    </div>
+    <div class="adv">
+      <div style="display:grid;gap:14px;align-content:start">
+        <div class="rec" id="rec"></div>
+        <div><div class="lbl" style="margin-bottom:6px">Which mode wins at each shipment size</div><div class="strip" id="strip"></div><div class="strip-ax"><span>100 kg</span><span>1 t</span><span>10 t</span><span>40 t</span></div></div>
+        <div><div class="lbl" style="margin-bottom:6px">Things to check for this sector</div><ul class="flags" id="flags"></ul></div>
+      </div>
+      <div class="scroll"><table id="scale"></table></div>
+    </div>
+    <div>
+      <h3>Sector guide</h3>
+      <p class="note" style="margin:2px 0 8px">Best mode for typical cargo in each sector, by shipment size, under the current scenario. Click a row to load it above.</p>
+      <div class="scroll"><table class="matrix" id="matrix"></table></div>
+    </div>
+    <details>
+      <summary>Rate assumptions (replace with your own quotes)</summary>
+      <p class="note" style="margin-top:6px">These are illustrative normal-market rates for Asia to the US East Coast, not quotes. The current-event scenarios scale them. Right now: <span id="mult" class="nums"></span>.</p>
+      <div class="rates" id="rates"></div>
+    </details>
   </div>
 </section>
 
@@ -308,7 +356,7 @@ function solve(){
   const S=scenario(),cands=candidates(S,S.tpl),all=candidates(S,"any");
   const N={md:Math.max(...all.map(p=>p.d)),mc:Math.max(...all.map(p=>p.c))};
   const eq=equilibrium(S,N),naive=rank(cands,N,S,null),crowded=rank(cands,N,S,eq.del);
-  return{S,eq,naive,crowded,top:S.crowdOn?crowded:naive};
+  return{S,eq,naive,crowded,cands,top:S.crowdOn?crowded:naive};
 }
 
 // ---------- network graph
@@ -431,7 +479,7 @@ function drawCrowd({S,eq,naive,crowded}){
 function render(){
   const R=solve();
   $("routes").innerHTML=R.top.map((p,i)=>card(p,i,["Best match","Alternative","Alternative"][i])).join("");
-  drawGraph(R);drawCrowd(R);if(!$("view-map").hidden)drawMaps(R);
+  drawGraph(R);drawCrowd(R);drawMode(R);if(!$("view-map").hidden)drawMaps(R);
   window.__last=R;
 }
 ["origin","tpl","dest","wt","wr","crowdOn","crowd","crowdPref"].forEach(id=>$(id).addEventListener("input",render));
@@ -440,6 +488,81 @@ $("month").addEventListener("input",()=>{setMonth();render()});
 function tab(which){const map=which==="map";$("tab-map").setAttribute("aria-selected",map);$("tab-graph").setAttribute("aria-selected",!map);
   $("view-map").hidden=!map;$("view-graph").hidden=map;if(map)drawMaps(window.__last)}
 $("tab-graph").onclick=()=>tab("graph");$("tab-map").onclick=()=>tab("map");
+
+// ---------- mode advisor
+// Illustrative presets, not data: value density, density (kg/m³), annual carrying cost, typical need-by days, shelf life
+const SECTORS=[
+ {id:"ff",g:"Apparel",n:"Fast fashion / drops",v:35,den:200,carry:.40,due:25},
+ {id:"season",g:"Apparel",n:"Seasonal collections",v:25,den:200,carry:.35,due:60},
+ {id:"basics",g:"Apparel",n:"Basics / replenishment",v:15,den:200,carry:.25,due:75},
+ {id:"fresh",g:"Food",n:"Fresh / chilled",v:8,den:350,carry:.25,due:14,shelf:14,reefer:true},
+ {id:"frozen",g:"Food",n:"Frozen",v:5,den:450,carry:.20,due:120,shelf:365,reefer:true},
+ {id:"dry",g:"Food",n:"Shelf-stable / dry",v:4,den:500,carry:.20,due:120},
+ {id:"elec",g:"Defense",n:"Electronics & components",v:800,den:250,carry:.15,due:45},
+ {id:"heavy",g:"Defense",n:"Heavy equipment & parts",v:40,den:600,carry:.15,due:120},
+ {id:"dg",g:"Defense",n:"Hazardous materials (DG)",v:60,den:700,carry:.15,due:90,dg:true}];
+const FLAGS={
+ Apparel:["Country-of-origin labeling and textile fiber content rules apply.","Children's apparel needs CPSC compliance (tracking labels, testing).","Seasonal goods lose value fast. A late fast-fashion shipment may sell only at markdown."],
+ Food:["FDA Prior Notice must be filed before food arrives in the US.","Chilled and frozen cargo needs reefer containers with temperature records. Reefer LCL is rarely offered.","Check that the 3PL is food-grade (and cold-chain capable where needed)."],
+ Defense:["Defense articles may need ITAR or EAR authorization. Confirm before booking.","US government-owned military cargo generally must move on US-flag vessels (Cargo Preference Act of 1904).","Hazardous goods follow IMDG (ocean) and IATA DGR (air). Some classes fly on cargo-only aircraft, and LCL is often refused.","Plan for chain of custody and a 3PL with the right security clearances."]};
+const RATE_DEF=[["air","Air ($/kg)",4.5],["lcl","Ocean LCL ($/m³)",95],["f20","20' container ($)",2300],["f40","40' container ($)",3000],["r40","40' reefer ($)",6000]];
+$("rates").innerHTML=RATE_DEF.map(([k,l,v])=>`<label><span class="lbl">${l}</span><input type="number" id="rate-${k}" value="${v}" min="0" step="any"></label>`).join("");
+const rate=k=>Math.max(0,+$("rate-"+k).value||0);
+const sel=$("sec");["Apparel","Food","Defense"].forEach(g=>{const og=document.createElement("optgroup");og.label=g;SECTORS.filter(s=>s.g===g).forEach(s=>og.append(new Option(s.n,s.id)));sel.append(og)});
+function loadSector(id){const s=SECTORS.find(x=>x.id===id);sel.value=id;$("val").value=s.v;$("due").value=s.due}
+loadSector("ff");
+const BOX={f20:{cbm:33,kg:21000,n:"20' container"},f40:{cbm:67,kg:26000,n:"40' container"},r40:{cbm:59,kg:26000,n:"40' reefer"}};
+const MODE_COLOR={air:"var(--alt2)",lcl:"var(--alt1)",f20:"var(--accent)",f40:"var(--accent)",r40:"var(--accent)"};
+function advCtx(R){
+  const ls=legs(R.S),ocean=ls.filter(l=>l.id!=="Air"),air=ls.find(l=>l.id==="Air");
+  const c=R.cands;return{oceanX:Math.min(...ocean.map(l=>l.c))/100,airX:air.c/900,
+    oceanDays:Math.min(...c.filter(p=>p.leg!=="Air").map(p=>p.d)),airDays:Math.min(...c.filter(p=>p.leg==="Air").map(p=>p.d))};
+}
+function modes(sec,kg,val,due,X){
+  const cbm=kg/sec.den,carry=d=>val*kg*sec.carry*d/365,out=[];
+  const add=(id,name,freight,days,why)=>{let ok=!why;
+    if(ok&&sec.shelf&&days>sec.shelf){ok=false;why="spoils in transit"}
+    if(ok&&days>due){ok=false;why="misses deadline"}
+    out.push({id,name,days,freight,total:freight+carry(days),ok,why})};
+  const chg=Math.max(kg,cbm*167);
+  add("air","Air",chg*rate("air")*X.airX*(sec.dg?1.8:1)*(sec.reefer?1.15:1)+250+(sec.dg?500:0),X.airDays);
+  add("lcl","Ocean LCL",Math.max(1,cbm)*rate("lcl")*X.oceanX+450,X.oceanDays+7,sec.reefer||sec.dg?"rarely offered":null);
+  for(const b of(sec.reefer?["r40"]:["f20","f40"])){const B=BOX[b],n=Math.ceil(Math.max(cbm/B.cbm,kg/B.kg));
+    add(b,(n>1?n+"× ":"")+B.n,n*(rate(b)*X.oceanX+650+(sec.dg?1500:0)),X.oceanDays+(b==="r40"?1:0))}
+  const ok=out.filter(m=>m.ok);
+  const best=(ok.length?ok:out.filter(m=>m.why!=="rarely offered")).reduce((a,b)=>a.total<b.total?a:b);
+  return{list:out,best,none:!ok.length};
+}
+const usd=n=>n>=1000?"$"+Math.round(n).toLocaleString():"$"+n.toFixed(n<10?2:0);
+const SIZES=[100,250,500,1000,2500,5000,10000,20000,40000];
+function drawMode(R){
+  const X=advCtx(R),sec=SECTORS.find(s=>s.id===sel.value),kg=Math.max(10,+$("kg").value||10),val=Math.max(0,+$("val").value||0),due=Math.max(1,+$("due").value||1);
+  $("mult").textContent=`ocean ×${X.oceanX.toFixed(2)}, air ×${X.airX.toFixed(2)}`;
+  const M=modes(sec,kg,val,due,X),b=M.best;
+  const alt=M.list.filter(m=>m!==b&&m.ok).sort((a,c)=>a.total-c.total)[0];
+  $("rec").innerHTML=`<span class="lbl">Recommended for ${kg.toLocaleString()} kg of ${sec.n.toLowerCase()}</span>
+   <span class="big">${b.name}</span>
+   <span class="nums">≈${b.days} days door to door · ${usd(b.total/kg)}/kg all-in · ${usd(b.total)} total</span>
+   ${M.none?`<span class="tag">No mode meets the ${sec.shelf?"shelf life":"deadline"}. This is the least-bad option.</span>`:""}
+   ${alt?`<span class="note">Next best: ${alt.name}, ${usd(alt.total/kg)}/kg, ≈${alt.days} days.</span>`:""}`;
+  // scale table + strip
+  const cols=sec.reefer?["air","lcl","r40"]:["air","lcl","f20","f40"],names={air:"Air",lcl:"Ocean LCL",f20:"20' FCL",f40:"40' FCL",r40:"40' reefer"};
+  const rows=SIZES.map(s=>({s,m:modes(sec,s,val,due,X)}));
+  $("scale").innerHTML=`<tr><th>Weight</th>${cols.map(c=>`<th>${names[c]}</th>`).join("")}</tr>`+rows.map(({s,m})=>`<tr><td class="n">${s>=1000?s/1000+" t":s+" kg"}</td>${cols.map(c=>{const x=m.list.find(y=>y.id===c);
+     if(x.why==="rarely offered")return`<td class="off">—</td>`;
+     return`<td class="n ${x===m.best?"best":x.ok?"":"off"}">${usd(x.total/s)}/kg<br><span class="${x.ok?"note":"tag"}">${x.ok?"≈"+x.days+" d":x.why}</span></td>`}).join("")}</tr>`).join("")+
+     `<tr><td colspan="${cols.length+1}" class="note">All-in cost per kg = freight + inventory carrying cost while in transit. The highlighted cell is the cheapest mode that arrives in time.</td></tr>`;
+  const segs=[];rows.forEach(({m})=>{const id=m.best.id;const k=id.startsWith("f")||id==="r40"?"fcl":id;const lab=k==="fcl"?(sec.reefer?"Reefer":"Full container"):names[id];if(segs.length&&segs.at(-1).k===k)segs.at(-1).n++;else segs.push({k,lab,n:1,c:MODE_COLOR[id]})});
+  $("strip").innerHTML=segs.map(g=>`<span style="flex:${g.n};background:${g.c}" title="${g.lab}">${g.lab}</span>`).join("");
+  $("flags").innerHTML=FLAGS[sec.g].map(f=>`<li>${f}</li>`).join("");
+  // sector matrix at each sector's own presets
+  const MS=[[300,"Small · 300 kg"],[3000,"Medium · 3 t"],[20000,"Large · 20 t"]];
+  $("matrix").innerHTML=`<tr><th>Sector</th>${MS.map(m=>`<th>${m[1]}</th>`).join("")}</tr>`+SECTORS.map(s=>`<tr data-sec="${s.id}" style="cursor:pointer"><td><span class="lbl">${s.g}</span><br><b>${s.n}</b></td>${MS.map(([w])=>{const m=modes(s,w,s.v,s.due,X);
+     return`<td class="${m.none?"off":""}"><b>${m.best.name}</b><br><span class="nums">${usd(m.best.total/w)}/kg · ≈${m.best.days} d</span>${m.none?`<br><span class="tag">nothing meets the deadline</span>`:""}</td>`}).join("")}</tr>`).join("");
+}
+$("matrix").addEventListener("click",e=>{const r=e.target.closest("tr[data-sec]");if(r){loadSector(r.dataset.sec);drawMode(window.__last)}});
+sel.addEventListener("input",()=>{loadSector(sel.value);drawMode(window.__last)});
+["kg","val","due",...RATE_DEF.map(r=>"rate-"+r[0])].forEach(id=>$(id).addEventListener("input",()=>drawMode(window.__last)));
 
 // ---------- 3PL table
 [...new Set(TPL.map(t=>t.t))].forEach(t=>$("ftype").add(new Option(t,t)));

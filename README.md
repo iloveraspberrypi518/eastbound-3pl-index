@@ -33,6 +33,14 @@ You can switch every scenario on or off to test "what if" questions.
 ### Crowd effect (game theory)
 Other retailers read the same news and react the same way. When most of them pile into one port or the Panama Canal, it congests. The tool works out where the crowd ends up once nobody can do better by switching routes (an equilibrium), then gives your best move in response. It also compares the "obvious" route with the smarter one once crowding is factored in.
 
+### Mode advisor
+Should a shipment fly or sail, and in what kind of container? Pick a sector, shipment weight, cargo value and deadline. The advisor compares air, ocean LCL (a shared container), 20' and 40' containers, and reefers (refrigerated containers) by **all-in cost per kg**: freight, plus the cost of inventory sitting in transit. It rules out modes that miss the deadline or the product's shelf life. It includes:
+- a scale table from 100 kg to 40 t showing where ocean starts beating air
+- a sector guide for apparel, food and defense materials at small, medium and large shipment sizes
+- compliance reminders for each sector, such as FDA Prior Notice, ITAR/EAR, the Cargo Preference Act, and dangerous-goods rules
+
+Rates are illustrative and editable. Current-event scenarios scale them up or down.
+
 ### 3PL index and ports
 - **3PLs:** 14 providers, including DHL Supply Chain, Ryder, GXO, NFI, GEODIS, Kenco, DSV, Saddle Creek, Flexport, ShipBob, ShipMonk, Red Stag and Stord. The index shows warehouse square footage, East Coast hub cities, and nearest port. You can filter by type or by port.
 - **Ports:** 2025 container volumes and year-over-year change for East Coast ports, where a verified figure exists.
@@ -55,6 +63,7 @@ Sources are listed at the bottom of the page.
 - [ ] 3PL rate ranges: storage per pallet, pick-and-pack, receiving
 - [ ] Anonymous quote sharing, so retailers can report the rates they actually received
 - [ ] Tariff and duty estimates by country of origin
+- [ ] Real mode-advisor rates by lane, plus more sectors (electronics, furniture, pharma, auto parts)
 
 ### Smarter routing
 - [ ] Live data feeds for news, port delays and weather, replacing manual toggles
