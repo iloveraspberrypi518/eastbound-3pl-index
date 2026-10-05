@@ -1,198 +1,102 @@
-# AI Agentic Tools Template
+# Eastbound 3PL Index
 
-A minimal starting point for working with AI coding assistants in a dev container. The container image comes pre-loaded with all tools — this repo only needs the config files to get everything running.
+A free tool for retailers who import goods into the US East Coast. It answers two questions:
 
----
+1. **Which 3PLs are near which ports?** A searchable index of third-party logistics providers, their East Coast hub locations, and the ports closest to them.
+2. **What's the best way to get a container from the factory to my 3PL or showroom right now?** A route planner that weighs speed, cost and risk, and adjusts for world events, the season, and what other shippers are likely to do.
 
-## Quick Start
+**Live site:** https://iloveraspberrypi518.github.io/personaluse/port-index/
 
-1. Click **"Use this template"** button (top right of this repo)
-2. Select **"Create a new repository"**
-3. Name your repository and click **"Create repository from template"**
-4. Open your new repo in GitHub Codespaces:
-   - Click **Code** → **Codespaces** → **Create codespace on main**
-5. VS Code will open and the dev container will automatically build
-6. The postCreateCommand will run:
-   - Set up SSH keys and PATH
-   - Install and configure MCP servers
-   - Initialize skills infrastructure
-   - Install the skill-creator tool
-   - Sync all skills to your agents
-
-**That's it!** All AI agents (Claude Code, OpenCode, Copilot, Crush, Gemini, Codex) are ready to use.
+> **Status:** early prototype. It covers the US East Coast only. Transit times are typical estimates, and costs are a relative index, not real quotes. Check facility locations with each provider before relying on them.
 
 ---
 
-## What's in the Dev Container
+## What it does today
 
-Your container includes:
+### Shipment journey
+Pick a factory region (Shanghai, Ho Chi Minh City or Mumbai), a 3PL, and a final stop. The final stop can be a showroom or studio, with the option to skip the 3PL entirely. The planner compares every path and highlights the best route plus two alternatives:
 
-- **[Claude Code](https://code.claude.com/docs/en/overview)** — AI agentic coding tool from Anthropic
-- **[OpenCode](https://github.com/opencode-ai/opencode)** — Open source code-focused AI tool
-- **[Copilot](https://github.com/features/copilot)** — GitHub's AI pair programmer
-- **[Crush](https://github.com/charmbracelet/crush)** — A beautifully themed assistant for command-line work
-- **[Codex](https://github.com/openai/codex)** — OpenAI's agentic tool
-- **[Gemini](https://github.com/google-gemini/gemini-cli)** — Google's AI coding assistant
+**Factory → origin port or airport → main leg (Panama Canal, Suez Canal, Cape of Good Hope, or air) → US East Coast entry → 3PL hub → showroom/studio**
 
-**Configuration managed by:**
-- `configs/mcp-servers.conf` — Model Context Protocol servers available to all agents
-- `.skillshare/` — Custom skills available to all agents (single source of truth)
+Two sliders set how much you care about speed versus cost, and how much risk you'll accept.
 
----
+There are two ways to view the routes:
+- **Network graph:** every possible path laid out left to right, with the top routes highlighted.
+- **Map:** a world map of the ocean or air leg, plus an East Coast map of the trip from port to 3PL to showroom.
 
-## Starting the Agents
+### Scenarios
+- **Current events**, preset from Sept–Oct 2026 news: Red Sea/Suez still contested, Strait of Hormuz closed (higher fuel prices), Shanghai port congestion, peak-season rates, and Panama Canal drought limits.
+- **Weather and seasons:** pick a ship month and the usual seasonal risks turn on. These are Lunar New Year/Tết factory closures, West Pacific typhoons, South Asia monsoon, Cape of Good Hope winter storms, Atlantic hurricanes at Southeast ports, and nor'easters.
 
-All launcher scripts live in `permissions/` inside the container (baked into the image). Each one starts its tool with the right flags so you're not interrupted by permission prompts.
+You can switch every scenario on or off to test "what if" questions.
 
-### Claude Code
+### Crowd effect (game theory)
+Other retailers read the same news and react the same way. When most of them pile into one port or the Panama Canal, it congests. The tool works out where the crowd ends up once nobody can do better by switching routes (an equilibrium), then gives your best move in response. It also compares the "obvious" route with the smarter one once crowding is factored in.
 
-```
-# claude.sh
-```
+### 3PL index and ports
+- **3PLs:** 14 providers, including DHL Supply Chain, Ryder, GXO, NFI, GEODIS, Kenco, DSV, Saddle Creek, Flexport, ShipBob, ShipMonk, Red Stag and Stord. The index shows warehouse square footage, East Coast hub cities, and nearest port. You can filter by type or by port.
+- **Ports:** 2025 container volumes and year-over-year change for East Coast ports, where a verified figure exists.
 
-Runs `claude` with `IS_SANDBOX=1` and `--dangerously-skip-permissions`. In a dev container this is safe and makes the experience much smoother.
-
-### OpenCode
-
-```
-# opencode.sh
-```
-
-Permissions are handled by `.opencode/opencode.json`, already configured with `read`, `write`, and `execute` set to `allow`.
-
-### Copilot
-
-```
-# copilot.sh
-```
-
-Runs `copilot --allow-all`.
-
-### Crush
-
-```
-# crush.sh
-```
-
-Runs `crush --yolo`.
-
-### Codex
-
-```
-# codex.sh
-```
-
-Permissions are handled via `.codex/config.toml`, already configured for a sandbox environment.
+Sources are listed at the bottom of the page.
 
 ---
 
-## MCPs (Model Context Protocol Servers)
+## Roadmap
 
-MCP servers extend AI tools with access to external data and services. All MCP configuration flows from a single file: `configs/mcp-servers.conf`
+### Coverage
+- [ ] Gulf Coast ports (Houston, New Orleans, Mobile)
+- [ ] West Coast ports (LA/Long Beach, Oakland, Seattle/Tacoma) and rail from the West Coast to inland and East Coast hubs
+- [ ] More factory regions (South China/Shenzhen, Bangladesh, Indonesia, Mexico, Turkey)
+- [ ] More 3PLs, including regional and specialty providers (cold chain, bulky goods, apparel)
+- [ ] Verified facility addresses for every 3PL hub
 
-### Adding Additional MCPs
+### Pricing
+- [ ] Real cost numbers instead of the relative index, using public freight rate benchmarks (for example Freightos FBX and Drewry) with dates and sources
+- [ ] 3PL rate ranges: storage per pallet, pick-and-pack, receiving
+- [ ] Anonymous quote sharing, so retailers can report the rates they actually received
+- [ ] Tariff and duty estimates by country of origin
 
-Edit `configs/mcp-servers.conf` and add entries using this format:
+### Smarter routing
+- [ ] Live data feeds for news, port delays and weather, replacing manual toggles
+- [ ] Separate crowd groups: cost-focused and speed-focused shippers, and big and small retailers
+- [ ] Splitting a shipment across several routes or ports to spread risk
+- [ ] Cost of delay: missed sell-through windows, stockouts and holding cost
 
-```
-# SSE MCP (no authentication):
-dolt=https://bus-mgmt-databases.mcp.mathplosion.com/mcp-dolt-database/sse
-
-# HTTP MCP with authentication (credential from environment variable):
-# stitch=https://stitch.googleapis.com/mcp|http|X-Goog-Api-Key:$STITCH_API_KEY
-```
-
-The `dolt` entry above is already active and provides access to a version-controlled SQL database. To add other authenticated MCPs like Stitch, uncomment the entry and provide the API key via environment variables.
-
-After editing `configs/mcp-servers.conf`, run:
-
-```
-# install-mcps.sh
-```
-
-This reads the conf file and registers each MCP in all AI tools — Claude, OpenCode, Gemini, Crush, Copilot, and Codex. Safe to re-run; existing entries are replaced with current values.
-
-### For Authenticated MCPs
-
-To use authenticated MCPs like Stitch:
-
-1. Add the secret (e.g., `STITCH_API_KEY`) at [github.com/settings/codespaces](https://github.com/settings/codespaces) under "Repository secrets"
-2. Declare the secret in `.devcontainer/devcontainer.json` under `"secrets"` — this works in both GitHub Codespaces and local devcontainers:
-   ```json
-   "secrets": {
-     "STITCH_API_KEY": "STITCH_API_KEY"
-   }
-   ```
-3. Uncomment the MCP entry in `configs/mcp-servers.conf` and reference the secret variable (e.g., `$STITCH_API_KEY`)
-4. Run `install-mcps.sh`
-
-### Uninstalling MCPs
-
-```
-# uninstall-mcps.sh
-```
-
-Removes all MCP registrations listed in the conf file from every tool's config.
+### Product
+- [ ] Shareable links that save a scenario
+- [ ] Side-by-side comparison of 3PLs
+- [ ] Accounts and saved routes for retailers
+- [ ] A way for 3PLs to claim and update their own listing
 
 ---
 
-## Skills (All Agents)
+## Working on the site
 
-Skills are custom slash commands available across all your AI agents. The `.skillshare/` directory is the **single source of truth** for all skills.
+The site lives in [`port-index/`](port-index/):
 
-### Editing Skills
+| File | What it is |
+| --- | --- |
+| `template.html` | The source. Edit this file. |
+| `build.py` | Merges in the map data and writes the finished pages |
+| `index.html` | Generated page for GitHub Pages. Don't edit by hand. |
+| `data/` | Map outlines (Natural Earth, via world-atlas and us-atlas) |
 
-**Always edit skills directly in the `.skillshare/` directory.** Never manually edit skills in other tool directories — the `.skillshare/` folder is where skillshare manages your skills. Changes to skills in other locations will be overwritten during sync.
+To make a change:
 
-### Installing Skills
-
-Install individual skills using:
-
-```
-# skillshare install github.com/anthropics/skills/skill-creator
-# skillshare install github.com/your-org/your-skill-name
-```
-
-### Syncing Skills to All Agents
-
-After installing or modifying skills in `.skillshare/`, sync them to all your configured AI agents:
-
-```
-# sync-skills.sh
+```bash
+# 1. edit port-index/template.html
+python3 port-index/build.py   # 2. rebuild
+git add -A && git commit -m "Describe the change" && git push   # 3. publish
 ```
 
-This deploys skills to the platforms listed in `.skillshare/config.yaml` (Claude Code, OpenCode, Copilot, Gemini, Crush, Codex, etc.).
+GitHub Pages updates the live site a minute or two after each push.
 
 ---
 
-## Optional Add-ons
+## Development environment
 
-These scripts are available inside the container:
+This repo runs in a dev container from [calvinw/ai-agentic-tools](https://github.com/calvinw/ai-agentic-tools). The container comes with AI coding assistants, including Claude Code, OpenCode, Copilot, Crush, Codex and Gemini. Open it in GitHub Codespaces (**Code** → **Codespaces** → **Create codespace on main**) and setup runs automatically.
 
-### Data Science Tools
-
-```
-# install-datascience.sh
-```
-
-Installs Python data science libraries, Jupyter, Quarto, and TinyTeX. Includes: numpy, pandas, matplotlib, seaborn, requests.
-
-### Dolt Database
-
-```
-# install-dolt.sh
-```
-
-Installs [Dolt](https://github.com/dolthub/dolt), a version-controlled SQL database.
-
----
-
-## Container Image
-
-The image is built from [calvinw/ai-agentic-tools](https://github.com/calvinw/ai-agentic-tools) and published to:
-
-```
-ghcr.io/calvinw/ai-course-devcontainer:latest
-```
-
-It is rebuilt automatically on Dockerfile changes and weekly via GitHub Actions.
+- `configs/mcp-servers.conf` lists the MCP servers available to the agents. Run `install-mcps.sh` after editing it.
+- `.skillshare/` holds custom skills. Run `sync-skills.sh` after editing them.
+- See [`CLAUDE.md`](CLAUDE.md) for the full list of tools and scripts.
