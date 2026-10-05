@@ -1,0 +1,466 @@
+<title>Eastbound 3PL Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column, stacked working sections (journey with graph/map views + crowd model, 3PL index, ports). Bare-bones tool. */
+:root{
+  --ink:#14212b; --muted:#5b6b78; --paper:#f3f5f6; --panel:#ffffff; --line:#d5dde2;
+  --accent:#0a6c8c; --alt1:#b7791f; --alt2:#7a5ea8; --bad:#b4372f; --good:#2f7d4f;
+  --sea:#e4edf2; --land:#cfd8dd; --border:#ffffff; --hazard:#b4372f;
+  --display:"Archivo",system-ui,sans-serif; --body:"Archivo",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ink:#e3eaee; --muted:#93a4b0; --paper:#0f171d; --panel:#16212a; --line:#2a3946;
+  --accent:#4fb3d4; --alt1:#e0a84a; --alt2:#a990d6; --bad:#e2716a; --good:#6cc08f;
+  --sea:#12202a; --land:#2b3a46; --border:#16212a; --hazard:#e2716a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ink:#e3eaee; --muted:#93a4b0; --paper:#0f171d; --panel:#16212a; --line:#2a3946;
+  --accent:#4fb3d4; --alt1:#e0a84a; --alt2:#a990d6; --bad:#e2716a; --good:#6cc08f;
+  --sea:#12202a; --land:#2b3a46; --border:#16212a; --hazard:#e2716a; color-scheme:dark}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--body);padding:0 16px}
+.wrap{max-width:1120px;margin:0 auto;padding-block:28px 60px;display:grid;gap:36px}
+h1{font:800 28px/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font:700 19px/1.2 var(--display);margin:0 0 4px}
+h3{font:600 15px/1.2 var(--display);margin:0}
+.sub{color:var(--muted);margin:6px 0 0;max-width:70ch}
+.lbl{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;gap:14px}
+.controls{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end}
+.controls label{display:grid;gap:4px}
+select,input[type=search]{font:14px var(--body);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
+input[type=range]{accent-color:var(--accent);width:150px}
+.toggles{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer}
+.chip:has(input:checked){border-color:var(--bad);color:var(--bad)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{font:600 14px var(--body);background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:6px 12px;cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.scroll{overflow-x:auto}
+svg text{fill:var(--ink);font:12px var(--body)}
+svg .col{fill:var(--muted);font:500 10px var(--mono);letter-spacing:.08em}
+svg .small{font:500 10px var(--mono);fill:var(--muted)}
+.maps{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+@media (max-width:760px){.maps{grid-template-columns:1fr}}
+.maps figure{margin:0;display:grid;gap:6px}
+.maps svg{width:100%;height:auto;border:1px solid var(--line);border-radius:4px;background:var(--sea)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px}
+.routes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.route{border:1px solid var(--line);border-left:5px solid var(--c);border-radius:4px;padding:10px 12px;display:grid;gap:4px;align-content:start}
+.route b{font:600 14px var(--display)}
+.route .path{font-size:13px;color:var(--muted)}
+.nums{font:500 13px var(--mono);font-variant-numeric:tabular-nums}
+.crowd{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:760px){.crowd{grid-template-columns:1fr}}
+.bars{display:grid;gap:6px}
+.bar{display:grid;grid-template-columns:150px 1fr 110px;gap:8px;align-items:center;font-size:13px}
+.bar .track{height:10px;background:var(--sea);border-radius:2px;overflow:hidden}
+.bar .fill{height:100%;background:var(--accent)}
+.bar .nums{font-size:12px;text-align:right}
+.verdict{display:grid;gap:8px;font-size:14px}
+.verdict .row{display:grid;gap:2px;padding:8px 10px;border:1px solid var(--line);border-radius:4px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 10px;white-space:nowrap}
+td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{font:500 11px var(--mono);padding:2px 7px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.up{color:var(--good)}.down{color:var(--bad)}
+.note{font-size:13px;color:var(--muted);max-width:80ch;margin:0}
+.src a{color:var(--accent)}
+.src li{font-size:13px}
+button.pick{font:13px var(--body);background:none;border:1px solid var(--line);color:var(--accent);border-radius:4px;padding:3px 8px;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="lbl">East Coast prototype · v0.2 · news as of Oct 5, 2026</div>
+  <h1>Eastbound 3PL Index</h1>
+  <p class="sub">Find 3PLs near East Coast ports, then trace a shipment from the factory to a 3PL or straight to your showroom. Routes react to world events, the season, and what other shippers are likely to do.</p>
+</header>
+
+<section>
+  <h2>Shipment journey</h2>
+  <p class="note">Transit days are typical estimates. Cost is a relative index (100 = ocean freight via Panama) until real quotes are added.</p>
+  <div class="panel">
+    <div class="controls">
+      <label><span class="lbl">Factory region</span><select id="origin"></select></label>
+      <label><span class="lbl">3PL</span><select id="tpl"></select></label>
+      <label><span class="lbl">Showroom / studio</span><select id="dest"></select></label>
+      <label><span class="lbl">Ship month</span><select id="month"></select></label>
+      <label><span class="lbl">Speed ← priority → Cost</span><input id="wt" type="range" min="0" max="100" value="50"></label>
+      <label><span class="lbl">Risk tolerance: low ← → high</span><input id="wr" type="range" min="0" max="100" value="40"></label>
+    </div>
+    <div><div class="lbl" style="margin-bottom:6px">Current events · from Sept–Oct 2026 reporting</div><div class="toggles" id="events"></div></div>
+    <div><div class="lbl" style="margin-bottom:6px">Weather &amp; seasons · set by ship month, typical patterns</div><div class="toggles" id="weather"></div></div>
+
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-graph" aria-selected="true">Network graph</button>
+      <button role="tab" id="tab-map" aria-selected="false">Map</button>
+    </div>
+    <div id="view-graph" class="scroll"><svg id="graph" width="1080" height="460" viewBox="0 0 1080 460" role="img" aria-label="Shipment route network"></svg></div>
+    <div id="view-map" hidden>
+      <div class="maps">
+        <figure><svg id="world" viewBox="0 0 720 380" role="img" aria-label="World map of the main shipping leg"></svg><figcaption class="lbl">Main leg: factory to US entry</figcaption></figure>
+        <figure><svg id="usmap" viewBox="0 0 360 380" role="img" aria-label="East Coast map of the inland legs"></svg><figcaption class="lbl">Inland: port to 3PL to showroom</figcaption></figure>
+      </div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Best match</span><span><i style="background:var(--alt1)"></i>Alternative</span><span><i style="background:var(--alt2)"></i>Alternative</span><span><i style="background:var(--hazard);opacity:.5;height:10px;width:10px;border-radius:50%"></i>Active disruption or weather zone</span></div>
+    </div>
+    <div class="routes" id="routes"></div>
+  </div>
+</section>
+
+<section>
+  <h2>Crowd effect</h2>
+  <p class="note">Other retailers on your lane read the same news. If most of them pile into the same port or canal, it congests and slows down. This model shows where the crowd ends up once nobody can do better by switching (an equilibrium), and your best move given that.</p>
+  <div class="panel">
+    <div class="controls">
+      <label class="chip"><input type="checkbox" id="crowdOn" checked>Factor in other shippers</label>
+      <label><span class="lbl">Volume on your lane</span><select id="crowd"><option value="4">Light</option><option value="8" selected>Normal</option><option value="14">Peak surge</option></select></label>
+      <label><span class="lbl">Other shippers prioritize</span><select id="crowdPref"><option value="0.75">Cost (typical)</option><option value="0.5">Balanced</option><option value="0.2">Speed</option></select></label>
+    </div>
+    <div class="crowd">
+      <div><h3>Where the crowd lands</h3><p class="note" style="margin:2px 0 10px">Share of lane volume by US entry point, and congestion delay it causes.</p><div class="bars" id="bars"></div></div>
+      <div><h3>Your move</h3><div class="verdict" id="verdict" style="margin-top:10px"></div></div>
+    </div>
+    <p class="note">Capacity is scaled from 2025 port volume where known. Charleston, Norfolk, Jacksonville and airport capacities are placeholder assumptions.</p>
+  </div>
+</section>
+
+<section>
+  <h2>3PL index</h2>
+  <p class="note">Hub metros are representative East Coast locations drawn from public information. Confirm facility addresses before requesting quotes. Distance is an estimate: straight-line × 1.2.</p>
+  <div class="panel">
+    <div class="controls">
+      <label><span class="lbl">Search</span><input id="q" type="search" placeholder="Provider or metro"></label>
+      <label><span class="lbl">Type</span><select id="ftype"><option value="">All types</option></select></label>
+      <label><span class="lbl">Near port</span><select id="fport"><option value="">Any port</option></select></label>
+    </div>
+    <div class="scroll"><table id="tbl"></table></div>
+  </div>
+</section>
+
+<section>
+  <h2>East Coast ports</h2>
+  <div class="panel scroll"><table id="ports"></table></div>
+  <p class="note">A dash means no verified 2025 figure yet.</p>
+</section>
+
+<section class="src">
+  <h2>Sources</h2>
+  <ul>
+    <li><a href="https://www.kbcadvisors.com/insights/h2-2025-top-us-container-report">KBC Advisors, H2 2025 Top US Container Report</a>: 2025 port volumes and YoY change</li>
+    <li><a href="https://www.3plogistics.com/3pl-market-info-resources/3pl-market-information/aas-top-25-north-american-warehousing-3pls-list/">Armstrong &amp; Associates, Top North American Warehousing 3PLs</a>: warehouse square footage</li>
+    <li><a href="https://redstagfulfillment.com/biggest-3pl-companies/">Red Stag Fulfillment, Biggest 3PL Companies</a></li>
+    <li><a href="https://www.freightos.com/freight-resources/red-sea-transits-accelerate-even-as-houthis-advance-september-15-2026-update/">Freightos, Sept 15, 2026 update</a>: Red Sea, transpacific rates</li>
+    <li><a href="https://gofreight.com/blog/maritime-disruption">GoFreight, Maritime Disruption 2026</a>: Suez throughput, Shanghai waits</li>
+    <li><a href="https://carraglobe.com/strait-of-hormuz-closure-2026/">Carra Globe, Strait of Hormuz Closure 2026</a></li>
+    <li><a href="https://www.worldcargonews.com/news/2026/09/nrf-september-could-be-busiest-import-month-for-us-ports/">WorldCargo News, NRF Global Port Tracker, Sept 2026</a>: peak volume, Panama drought rerouting</li>
+    <li><a href="https://www.rswarehousingsolutions.com/3pl-comparison-shipbob-shipmonk-red-stag/">RS Warehousing, ShipBob vs ShipMonk vs Red Stag</a>: e-commerce 3PL locations</li>
+    <li>Map geometry: Natural Earth via world-atlas and us-atlas</li>
+  </ul>
+</section>
+</div>
+
+<script type="application/json" id="world-data">__WORLD__</script>
+<script type="application/json" id="us-data">__US__</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+// ---------- data ([lat, lon])
+const METRO={
+ "Central NJ":[40.31,-74.51],"Lehigh Valley PA":[40.60,-75.49],"Baltimore MD":[39.29,-76.61],"Charlotte NC":[35.23,-80.84],
+ "Savannah GA":[32.08,-81.09],"Atlanta GA":[33.75,-84.39],"Lakeland FL":[28.04,-81.95],"South Florida":[26.12,-80.14],
+ "Sweetwater TN":[35.60,-84.46],"Chattanooga TN":[35.05,-85.31]};
+const PORTS=[
+ {id:"NYNJ",name:"New York / New Jersey",ll:[40.68,-74.15],teu:"8.9M",yoy:2.3,gw:true},
+ {id:"SAV",name:"Savannah",ll:[32.12,-81.14],teu:"5.7M",yoy:2.6,gw:true},
+ {id:"CHS",name:"Charleston",ll:[32.80,-79.92],teu:null,yoy:2.7,gw:true},
+ {id:"ORF",name:"Virginia (Norfolk)",ll:[36.90,-76.33],teu:null,yoy:-8.1,gw:true},
+ {id:"JAX",name:"Jacksonville",ll:[30.40,-81.55],teu:null,yoy:-2.0,gw:true,note:"Imports −9.5%"},
+ {id:"BAL",name:"Baltimore",ll:[39.26,-76.56],teu:null,yoy:null},
+ {id:"PHL",name:"Philadelphia",ll:[39.90,-75.14],teu:null,yoy:null},
+ {id:"MIA",name:"Miami",ll:[25.77,-80.17],teu:null,yoy:null},
+ {id:"PEV",name:"Port Everglades",ll:[26.09,-80.12],teu:null,yoy:null},
+ {id:"BOS",name:"Boston",ll:[42.35,-71.03],teu:null,yoy:null}];
+const AIR=[{id:"JFK",name:"JFK (New York)",ll:[40.64,-73.78]},{id:"ATL",name:"ATL (Atlanta)",ll:[33.64,-84.43]},{id:"MIAair",name:"MIA (Miami)",ll:[25.80,-80.29]}];
+const TPL=[
+ {n:"DHL Supply Chain",t:"Contract logistics",sf:163.0,m:["Lehigh Valley PA","Central NJ","Atlanta GA","Baltimore MD"]},
+ {n:"Ryder",t:"Contract logistics",sf:105.0,m:["Central NJ","Atlanta GA","South Florida"]},
+ {n:"GXO",t:"Contract logistics",sf:83.7,m:["Lehigh Valley PA","Central NJ","Atlanta GA"]},
+ {n:"NFI",t:"Contract logistics",sf:70.0,m:["Central NJ","Lehigh Valley PA","Savannah GA"]},
+ {n:"GEODIS",t:"Contract logistics",sf:50.0,m:["Lehigh Valley PA","Atlanta GA","Charlotte NC"]},
+ {n:"Kenco",t:"Contract logistics",sf:45.9,m:["Chattanooga TN","Atlanta GA"]},
+ {n:"DSV",t:"Forwarder + warehousing",sf:45.3,m:["Central NJ","Savannah GA","Atlanta GA"]},
+ {n:"FedEx Logistics",t:"Contract logistics",sf:38.8,m:["Atlanta GA","Lehigh Valley PA"]},
+ {n:"Saddle Creek",t:"Contract logistics",sf:31.0,m:["Lakeland FL","Atlanta GA","Charlotte NC"]},
+ {n:"Flexport",t:"Forwarder + warehousing",sf:null,m:["Central NJ","Atlanta GA","Savannah GA"]},
+ {n:"ShipBob",t:"E-commerce fulfillment",sf:null,m:["Central NJ","Atlanta GA"]},
+ {n:"ShipMonk",t:"E-commerce fulfillment",sf:null,m:["South Florida","Central NJ"]},
+ {n:"Red Stag Fulfillment",t:"E-commerce fulfillment",sf:null,m:["Sweetwater TN"],note:"Bulky / heavy items"},
+ {n:"Stord",t:"E-commerce fulfillment",sf:null,m:["Atlanta GA","Lehigh Valley PA"]}];
+const DEST={"New York City":[40.75,-73.99],"Washington DC":[38.90,-77.03],"Charlotte NC":[35.22,-80.84],"Atlanta GA":[33.78,-84.38],"Miami FL":[25.79,-80.13]};
+// Port-to-port ocean days to US East Coast by main leg (typical estimates)
+const ORIGINS={
+ "Shanghai, China":{c:"cn",port:"Shanghai",portLL:[30.63,122.07],air:"PVG",airLL:[31.15,121.8],leg:{Panama:33,Suez:34,Cape:46}},
+ "Ho Chi Minh City, Vietnam":{c:"vn",port:"Cat Lai",portLL:[10.76,106.79],air:"SGN",airLL:[10.82,106.65],leg:{Panama:36,Suez:30,Cape:42}},
+ "Mumbai, India":{c:"in",port:"Nhava Sheva",portLL:[18.95,72.95],air:"BOM",airLL:[19.09,72.87],leg:{Panama:52,Suez:24,Cape:34}}};
+const EVENTS=[
+ {id:"redsea",on:true,t:"Red Sea / Suez contested"},
+ {id:"hormuz",on:true,t:"Hormuz closed: high fuel"},
+ {id:"shanghai",on:true,t:"Shanghai port congestion"},
+ {id:"peak",on:true,t:"Peak-season rates"},
+ {id:"panama",on:false,t:"Panama Canal drought limits"}];
+const WEATHER=[
+ {id:"lunar",t:"Lunar New Year / Tết closures",mo:[1,2]},
+ {id:"typhoon",t:"West Pacific typhoons",mo:[7,8,9,10]},
+ {id:"monsoon",t:"South Asia monsoon",mo:[6,7,8,9]},
+ {id:"capewinter",t:"Cape of Good Hope winter storms",mo:[6,7,8]},
+ {id:"hurricane",t:"Atlantic hurricanes (Southeast ports)",mo:[8,9,10]},
+ {id:"noreaster",t:"Nor'easters (Northeast)",mo:[12,1,2,3]}];
+// Model capacity per US entry, in "lane volume" units (NY/NJ, Savannah scaled from 2025 TEU; rest assumed)
+const CAP={NYNJ:8.9,SAV:5.7,CHS:2.8,ORF:3.4,JAX:1.3,JFK:.6,ATL:.5,MIAair:.5};
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+// ---------- helpers
+const hav=(a,b)=>{const r=Math.PI/180,dl=(b[0]-a[0])*r,dg=(b[1]-a[1])*r;const x=Math.sin(dl/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dg/2)**2;return 3959*2*Math.asin(Math.sqrt(x))};
+const road=(a,b)=>Math.round(hav(a,b)*1.2);
+const truck=mi=>({d:Math.max(1,Math.ceil(mi/500)),c:mi*0.06});
+const $=id=>document.getElementById(id);
+const flags=L=>Object.fromEntries(L.map(e=>[e.id,$("ev-"+e.id).checked]));
+const legName=l=>l==="Air"?"Air freight":l==="Cape"?"Cape of Good Hope":l+" Canal";
+const COLORS=["var(--accent)","var(--alt1)","var(--alt2)"];
+
+// ---------- controls
+Object.keys(ORIGINS).forEach(k=>$("origin").add(new Option(k,k)));
+$("tpl").add(new Option("Any 3PL","any"));TPL.forEach(t=>$("tpl").add(new Option(t.n,t.n)));$("tpl").add(new Option("No 3PL: ship direct to showroom","none"));
+Object.keys(DEST).forEach(k=>$("dest").add(new Option(k,k)));
+MONTHS.forEach((m,i)=>$("month").add(new Option(m,i+1)));$("month").value=10;
+const chip=e=>`<label class="chip"><input type="checkbox" id="ev-${e.id}" ${e.on?"checked":""}>${e.t}</label>`;
+$("events").innerHTML=EVENTS.map(chip).join("");
+$("weather").innerHTML=WEATHER.map(chip).join("");
+function setMonth(){const m=+$("month").value;WEATHER.forEach(w=>$("ev-"+w.id).checked=w.mo.includes(m))}
+setMonth();
+
+function scenario(){return{o:$("origin").value,O:ORIGINS[$("origin").value],tpl:$("tpl").value,destName:$("dest").value,dest:DEST[$("dest").value],
+  e:flags(EVENTS),w:flags(WEATHER),wt:$("wt").value/100,wr:1-$("wr").value/100,
+  crowdOn:$("crowdOn").checked,D:+$("crowd").value,cwt:+$("crowdPref").value}}
+
+// ---------- route engine
+function legs(S){
+  const {O,e,w}=S,c=O.c,fuel=e.hormuz?15:0,peak=e.peak?20:0,cong=(c==="cn"&&e.shanghai)?6:0;
+  const closed=w.lunar?(c==="cn"?10:c==="vn"?7:0):0;
+  const orig=closed+(w.typhoon?(c==="cn"?3:c==="vn"?1:0):0)+(w.monsoon?(c==="in"?3:c==="vn"?2:0):0);
+  const oRisk=(w.typhoon&&c!=="in"?1:0)+(w.monsoon&&c!=="cn"?1:0);
+  const airOrig=closed+(w.typhoon&&c==="cn"?1:0)+(w.monsoon&&c==="in"?1:0);
+  return[
+   {id:"Panama",d:O.leg.Panama+cong+orig+(e.panama?5:0),c:100+fuel+peak+(e.panama?25:0),r:2+oRisk+(e.panama?4:0),bad:e.panama},
+   {id:"Suez",d:O.leg.Suez+cong+orig+(e.redsea?3:0),c:95+fuel+peak+(e.redsea?45:0),r:2+oRisk+(e.redsea?6:0),bad:e.redsea},
+   {id:"Cape",d:O.leg.Cape+cong+orig+(w.capewinter?2:0),c:115+fuel*1.5+peak,r:3+oRisk+(w.capewinter?1:0),bad:w.capewinter},
+   {id:"Air",d:3+airOrig,c:900+(e.hormuz?40:0),r:1,bad:false}];
+}
+const PORTADJ={Panama:{SAV:-3,CHS:-2,JAX:-3,ORF:-1,NYNJ:0},Suez:{NYNJ:0,ORF:0,SAV:1,CHS:1,JAX:2},Cape:{NYNJ:0,ORF:0,SAV:1,CHS:1,JAX:1}};
+function gwWeather(id,w){const se=["SAV","CHS","JAX","MIAair"].includes(id),ne=["NYNJ","ORF","JFK"].includes(id);
+  return{d:(w.hurricane&&se?2:0)+(w.noreaster&&ne?1:0),r:(w.hurricane&&se?2:0)+(w.noreaster&&ne?1:0)}}
+function candidates(S,tpl){
+  const hubs=tpl==="none"?[null]:tpl==="any"?Object.keys(METRO):TPL.find(t=>t.n===tpl).m,out=[];
+  for(const L of legs(S)){
+    for(const g of(L.id==="Air"?AIR:PORTS.filter(p=>p.gw))){
+      const x=gwWeather(g.id,S.w);
+      const d0=L.d+(PORTADJ[L.id]?.[g.id]||0)+(L.id==="Air"?1:3)+x.d,c0=L.c+(L.id==="Air"?5:12)+2;
+      for(const h of hubs){
+        let d=d0+1,c=c0;
+        if(h){const a=truck(road(g.ll,METRO[h])),b=truck(road(METRO[h],S.dest));d+=a.d+2+b.d;c+=a.c+10+b.c}
+        else{const a=truck(road(g.ll,S.dest));d+=a.d;c+=a.c}
+        out.push({leg:L.id,g,h,d,c:Math.round(c),r:L.r+x.r});
+      }}}
+  return out;
+}
+// generalized cost: congestion days also cost money (demurrage/detention)
+// cost on a log scale so air (≈7–9x ocean) doesn't flatten differences between ocean options
+const gen=(p,x,N,wt,wr)=>(1-wt)*(p.d+x)/N.md+wt*1.5*Math.log10((p.c+3*x)/100)+wr*0.06*p.r;
+function bestPerCombo(cands,N,wt,wr){const m={};for(const p of cands){const k=p.leg+p.g.id;if(!m[k]||gen(p,0,N,wt,wr)<gen(m[k],0,N,wt,wr))m[k]=p}return Object.values(m)}
+function delays(R,x,S){
+  const load={},cap={...CAP};let pan=0;
+  R.forEach((r,i)=>{load[r.g.id]=(load[r.g.id]||0)+x[i]*S.D;if(r.leg==="Panama")pan+=x[i]*S.D});
+  const g={};for(const id in cap)g[id]=2.5*((load[id]||0)/cap[id])**2;
+  const pcap=S.e.panama?4:8;
+  return{g,pan:3*(pan/pcap)**2,load};
+}
+const extra=(p,del)=>(del.g[p.g.id]||0)+(p.leg==="Panama"?del.pan:0);
+// Method of successive averages: converges to a Wardrop (user) equilibrium,
+// where no shipper can cut their own cost by switching routes.
+function equilibrium(S,N){
+  const R=bestPerCombo(candidates(S,"any"),N,S.cwt,0.5);
+  let x=R.map(()=>1/R.length);
+  for(let k=1;k<=500;k++){
+    const del=delays(R,x,S),costs=R.map(r=>gen(r,extra(r,del),N,S.cwt,0.5));
+    const j=costs.indexOf(Math.min(...costs));x=x.map((v,i)=>v+((i===j?1:0)-v)/(k+1));
+  }
+  return{R,x,del:delays(R,x,S)};
+}
+function rank(cands,N,S,del){
+  const scored=cands.map(p=>{const x=del?extra(p,del):0;return{...p,x,dd:Math.round(p.d+x),cc:Math.round(p.c+3*x),s:gen(p,x,N,S.wt,S.wr)}}).sort((a,b)=>a.s-b.s);
+  const top=[],seen=new Set();for(const p of scored){const k=p.leg+p.g.id;if(!seen.has(k)){seen.add(k);top.push(p)}if(top.length===3)break}
+  return top;
+}
+function solve(){
+  const S=scenario(),cands=candidates(S,S.tpl),all=candidates(S,"any");
+  const N={md:Math.max(...all.map(p=>p.d)),mc:Math.max(...all.map(p=>p.c))};
+  const eq=equilibrium(S,N),naive=rank(cands,N,S,null),crowded=rank(cands,N,S,eq.del);
+  return{S,eq,naive,crowded,top:S.crowdOn?crowded:naive};
+}
+
+// ---------- network graph
+const NS="http://www.w3.org/2000/svg";
+function el(t,a,txt){const n=document.createElementNS(NS,t);for(const k in a)n.setAttribute(k,a[k]);if(txt!=null)n.textContent=txt;return n}
+function drawGraph({S,top,eq}){
+  const svg=$("graph");svg.innerHTML="";const H=460,X=[20,190,360,540,730,920],W=140,O=S.O;
+  const hubs=S.tpl==="none"?[null]:S.tpl==="any"?Object.keys(METRO):TPL.find(t=>t.n===S.tpl).m;
+  const gwBad=id=>gwWeather(id,S.w).d>0,cong=id=>S.crowdOn?eq.del.g[id]||0:0;
+  const cols=[
+    [{k:"F",t:"Factory: "+S.o.split(",")[0]}],
+    [{k:"OP",t:"Port: "+O.port},{k:"OA",t:"Airport: "+O.air}],
+    legs(S).map(l=>({k:"L"+l.id,t:legName(l.id)+(l.id==="Panama"&&S.crowdOn&&eq.del.pan>=1?` +${Math.round(eq.del.pan)}d`:""),bad:l.bad})),
+    [...PORTS.filter(p=>p.gw),...AIR].map(p=>({k:"G"+p.id,t:p.name.replace(" (Norfolk)","")+(cong(p.id)>=1?` +${Math.round(cong(p.id))}d`:""),bad:gwBad(p.id)})),
+    hubs[0]===null?[{k:"Hnone",t:"(no 3PL)"}]:hubs.map(h=>({k:"H"+h,t:h})),
+    [{k:"D",t:"Showroom: "+S.destName}]];
+  const pos={};
+  ["FACTORY","ORIGIN GATEWAY","MAIN LEG","US ENTRY","3PL HUB","FINAL STOP"].forEach((t,i)=>svg.append(el("text",{x:X[i],y:16,class:"col"},t)));
+  cols.forEach((c,i)=>{const step=Math.min(42,(H-50)/c.length),y0=30+((H-30)-step*c.length)/2;c.forEach((n,j)=>pos[n.k]={x:X[i],y:y0+j*step+step/2,n})});
+  const edges=[];
+  cols[1].forEach(n=>edges.push(["F",n.k]));
+  cols[2].forEach(n=>edges.push([n.k==="LAir"?"OA":"OP",n.k]));
+  cols[3].forEach(n=>{const air=AIR.some(a=>"G"+a.id===n.k);cols[2].forEach(l=>{if((l.k==="LAir")===air)edges.push([l.k,n.k])})});
+  cols[3].forEach(g=>cols[4].forEach(h=>edges.push([g.k,h.k])));
+  cols[4].forEach(h=>edges.push([h.k,"D"]));
+  const curve=(a,b)=>{const p=pos[a],q=pos[b],x1=p.x+W,x2=q.x;return`M${x1},${p.y} C${(x1+x2)/2},${p.y} ${(x1+x2)/2},${q.y} ${x2},${q.y}`};
+  edges.forEach(([a,b])=>svg.append(el("path",{d:curve(a,b),fill:"none",stroke:"var(--line)","stroke-width":1})));
+  top.map((p,i)=>[p,i]).reverse().forEach(([p,i])=>{
+    const seq=["F",p.leg==="Air"?"OA":"OP","L"+p.leg,"G"+p.g.id,p.h?"H"+p.h:"Hnone","D"];
+    for(let s=0;s<5;s++)svg.append(el("path",{d:curve(seq[s],seq[s+1]),fill:"none",stroke:COLORS[i],"stroke-width":i===0?4:2.5}))});
+  for(const k in pos){const{x,y,n}=pos[k];
+    svg.append(el("rect",{x,y:y-14,width:W,height:28,rx:4,fill:"var(--panel)",stroke:n.bad?"var(--bad)":"var(--line)","stroke-dasharray":n.bad?"4 3":""}));
+    svg.append(el("text",{x:x+8,y:y+4,...(n.bad?{style:"fill:var(--bad)"}:{})},n.t.length>22?n.t.slice(0,21)+"…":n.t));}
+}
+
+// ---------- maps
+const W_TOPO=JSON.parse($("world-data").textContent),US_TOPO=JSON.parse($("us-data").textContent);
+const lonlat=ll=>[ll[1],ll[0]];
+// Sea-lane waypoints [lon, lat]
+const HEAD={
+ Panama:{cn:[[135,31],[160,33],[-160,30]],vn:[[112,12],[121,20.5],[140,25],[170,28],[-160,25]],in:[[78,6],[95,6],[103.8,1.3],[110,6],[121,20.5],[140,25],[170,28],[-160,25]]},
+ Suez:{cn:[[122,25],[117,20],[110,12],[105,3],[103.8,1.2],[98,4.5],[95,6],[80,5.5],[60,13]],vn:[[106,6],[103.8,1.2],[98,4.5],[95,6],[80,5.5],[60,13]],in:[[62,14]]},
+ Cape:{cn:[[122,25],[117,20],[110,12],[105,3],[103.8,1.2],[98,4.5],[95,6],[80,0],[60,-15]],vn:[[106,6],[103.8,1.2],[98,4.5],[95,6],[80,0],[60,-15]],in:[[65,0]]}};
+const TAIL={
+ Panama:[[-125,18],[-95,10],[-79.55,8.9],[-79.9,9.35],[-77,13],[-74,19.8],[-74,25]],
+ Suez:[[51,12.3],[43.4,12.6],[38,20],[33.7,27.5],[32.55,29.9],[32.3,31.3],[25,34],[12,37],[-5.6,35.95],[-20,36],[-45,36],[-65,35]],
+ Cape:[[40,-32],[20,-36.5],[5,-25],[-15,-5],[-35,12],[-60,28]]};
+function lane(p,S){
+  const O=S.O;if(p.leg==="Air")return[lonlat(O.airLL),lonlat(p.g.ll)];
+  return[lonlat(O.portLL),...HEAD[p.leg][O.c],...TAIL[p.leg],lonlat(p.g.ll)];
+}
+function hazards(S,us){
+  const z=[],e=S.e,w=S.w;
+  if(!us){
+    if(e.redsea)z.push([[41,16],7,"Red Sea"]);
+    if(e.hormuz)z.push([[56.4,26.4],4,"Hormuz"]);
+    if(e.shanghai&&S.O.c==="cn")z.push([[122,31],4,"Congestion"]);
+    if(e.panama)z.push([[-79.7,9.1],4,"Panama"]);
+    if(w.typhoon)z.push([[130,20],12,"Typhoons"]);
+    if(w.monsoon)z.push([[78,14],10,"Monsoon"]);
+    if(w.capewinter)z.push([[20,-38],7,"Storms"]);
+  }
+  if(w.hurricane)z.push([[-77,27],us?4:9,"Hurricanes"]);
+  if(w.noreaster)z.push([[-70.5,40.5],us?2.5:5,"Nor'easters"]);
+  return z;
+}
+function drawMaps({S,top}){
+  // World: centered on the Pacific so the Panama route stays continuous
+  const wsvg=d3.select("#world");wsvg.selectAll("*").remove();
+  const proj=d3.geoNaturalEarth1().rotate([-150,0]);
+  proj.fitExtent([[6,6],[714,374]],{type:"MultiPoint",coordinates:[[-28,62],[-28,-48],[-32,62],[-32,-48],[150,62],[150,-48]]});
+  const path=d3.geoPath(proj);
+  wsvg.append("path").attr("d",path({type:"Sphere"})).attr("fill","var(--sea)");
+  wsvg.append("path").attr("d",path(topojson.feature(W_TOPO,W_TOPO.objects.land))).attr("fill","var(--land)");
+  hazards(S,false).forEach(([c,r,t])=>{wsvg.append("path").attr("d",path(d3.geoCircle().center(c).radius(r)())).attr("fill","var(--hazard)").attr("fill-opacity",.18).attr("stroke","var(--hazard)").attr("stroke-opacity",.6);
+    const[x,y]=proj(c);wsvg.append("text").attr("x",x).attr("y",y+3).attr("text-anchor","middle").attr("class","small").style("fill","var(--hazard)").text(t)});
+  top.map((p,i)=>[p,i]).reverse().forEach(([p,i])=>wsvg.append("path").attr("d",path({type:"LineString",coordinates:lane(p,S)})).attr("fill","none").attr("stroke",COLORS[i]).attr("stroke-width",i?2:3).attr("stroke-linejoin","round").attr("stroke-dasharray",p.leg==="Air"?"5 4":null));
+  const pins=[[S.O.portLL,S.O.port],[S.O.airLL,null],...new Map(top.map(p=>[p.g.id,[p.g.ll,null]])).values()];
+  pins.forEach(([ll,t])=>{const[x,y]=proj(lonlat(ll));wsvg.append("circle").attr("cx",x).attr("cy",y).attr("r",3.5).attr("fill","var(--ink)");if(t)wsvg.append("text").attr("x",x+6).attr("y",y-6).text(t)});
+  const[ux,uy]=proj([-74,36]);wsvg.append("text").attr("x",ux-6).attr("y",uy-30).attr("text-anchor","end").text("US East Coast");
+
+  // East Coast close-up
+  const usvg=d3.select("#usmap");usvg.selectAll("*").remove();
+  const up=d3.geoMercator().fitExtent([[8,8],[352,372]],{type:"MultiPoint",coordinates:[[-87.5,24.8],[-70.5,43]]});
+  const upath=d3.geoPath(up);
+  usvg.append("path").attr("d",upath(topojson.feature(US_TOPO,US_TOPO.objects.nation))).attr("fill","var(--land)");
+  usvg.append("path").attr("d",upath(topojson.mesh(US_TOPO,US_TOPO.objects.states,(a,b)=>a!==b))).attr("fill","none").attr("stroke","var(--border)").attr("stroke-width",.8);
+  hazards(S,true).forEach(([c,r,t])=>{usvg.append("path").attr("d",upath(d3.geoCircle().center(c).radius(r)())).attr("fill","var(--hazard)").attr("fill-opacity",.15).attr("stroke","var(--hazard)").attr("stroke-opacity",.6);
+    const[x,y]=up(c);usvg.append("text").attr("x",x).attr("y",y).attr("text-anchor","middle").attr("class","small").style("fill","var(--hazard)").text(t)});
+  const P=ll=>up(lonlat(ll));
+  top.map((p,i)=>[p,i]).reverse().forEach(([p,i])=>{const pts=[p.g.ll,...(p.h?[METRO[p.h]]:[]),S.dest].map(P);
+    usvg.append("path").attr("d","M"+pts.join("L")).attr("fill","none").attr("stroke",COLORS[i]).attr("stroke-width",i?2:3).attr("stroke-linejoin","round")});
+  Object.entries(METRO).forEach(([n,ll])=>{const[x,y]=P(ll);usvg.append("circle").attr("cx",x).attr("cy",y).attr("r",2.5).attr("fill","var(--muted)")});
+  PORTS.filter(p=>p.gw).forEach(p=>{const[x,y]=P(p.ll);usvg.append("rect").attr("x",x-3.5).attr("y",y-3.5).attr("width",7).attr("height",7).attr("fill","var(--ink)")});
+  const used=new Map();top.forEach(p=>{used.set(p.g.name,p.g.ll);if(p.h)used.set(p.h,METRO[p.h])});
+  used.forEach((ll,n)=>{const[x,y]=P(ll);usvg.append("text").attr("x",x+7).attr("y",y+4).attr("class","small").style("fill","var(--ink)").text(n)});
+  const[dx,dy]=P(S.dest);usvg.append("circle").attr("cx",dx).attr("cy",dy).attr("r",6).attr("fill","none").attr("stroke","var(--ink)").attr("stroke-width",2);
+  usvg.append("text").attr("x",dx-9).attr("y",dy+4).attr("text-anchor","end").style("font-weight",600).text(S.destName);
+}
+
+// ---------- route cards + crowd panel
+function card(p,i,label){return`<div class="route" style="--c:${COLORS[i]}"><span class="lbl">${label}</span>
+  <b>${p.leg==="Air"?"Air":"Ocean via "+(p.leg==="Cape"?"Cape of Good Hope":p.leg)} → ${p.g.name}</b>
+  <span class="path">${p.h?"3PL hub: "+p.h:"Direct to showroom"} → ${$("dest").value}</span>
+  <span class="nums">≈${p.dd} days${p.x>=0.5?` (incl. +${Math.round(p.x)} crowding)`:""} · cost index ${p.cc} · risk ${p.r}/10</span></div>`}
+function drawCrowd({S,eq,naive,crowded}){
+  const share={};eq.R.forEach((r,i)=>share[r.g.id]=(share[r.g.id]||0)+eq.x[i]);
+  const ids=[...PORTS.filter(p=>p.gw),...AIR].sort((a,b)=>(share[b.id]||0)-(share[a.id]||0));
+  $("bars").innerHTML=ids.map(g=>{const s=share[g.id]||0,dl=eq.del.g[g.id]||0;
+    return`<div class="bar"><span>${g.name}</span><span class="track"><span class="fill" style="display:block;width:${(s*100).toFixed(1)}%"></span></span><span class="nums">${Math.round(s*100)}%${dl>=0.5?` · +${Math.round(dl)}d`:""}</span></div>`}).join("")+
+    `<div class="bar"><span>Panama Canal transits</span><span class="track"><span class="fill" style="display:block;width:${(eq.R.reduce((a,r,i)=>a+(r.leg==="Panama"?eq.x[i]:0),0)*100).toFixed(1)}%;background:var(--alt1)"></span></span><span class="nums">${Math.round(eq.R.reduce((a,r,i)=>a+(r.leg==="Panama"?eq.x[i]:0),0)*100)}%${eq.del.pan>=0.5?` · +${Math.round(eq.del.pan)}d`:""}</span></div>`;
+  const n=naive[0],c=crowded[0],nx=extra(n,eq.del),same=n.leg===c.leg&&n.g.id===c.g.id;
+  const nm=p=>`${p.leg==="Air"?"Air":p.leg==="Cape"?"Cape":p.leg} → ${p.g.name}`;
+  $("verdict").innerHTML=`
+   <div class="row"><span class="lbl">If you ignore other shippers</span><b>${nm(n)}</b><span class="nums">Plan: ≈${n.d} days. If the crowd shows up: ≈${Math.round(n.d+nx)} days</span></div>
+   <div class="row" style="border-color:var(--accent)"><span class="lbl">Best response to the crowd</span><b>${nm(c)}</b><span class="nums">≈${c.dd} days · cost index ${c.cc}</span></div>
+   <p class="note">${same?"The obvious route still wins after crowding. Capacity is enough to absorb the rush at this volume.":`Going against the crowd saves about ${Math.max(0,Math.round(n.d+nx-c.dd))} days. Everyone else picks ${n.g.name}, so it backs up.`}</p>`;
+}
+
+function render(){
+  const R=solve();
+  $("routes").innerHTML=R.top.map((p,i)=>card(p,i,["Best match","Alternative","Alternative"][i])).join("");
+  drawGraph(R);drawCrowd(R);if(!$("view-map").hidden)drawMaps(R);
+  window.__last=R;
+}
+["origin","tpl","dest","wt","wr","crowdOn","crowd","crowdPref"].forEach(id=>$(id).addEventListener("input",render));
+[...EVENTS,...WEATHER].forEach(e=>$("ev-"+e.id).addEventListener("change",render));
+$("month").addEventListener("input",()=>{setMonth();render()});
+function tab(which){const map=which==="map";$("tab-map").setAttribute("aria-selected",map);$("tab-graph").setAttribute("aria-selected",!map);
+  $("view-map").hidden=!map;$("view-graph").hidden=map;if(map)drawMaps(window.__last)}
+$("tab-graph").onclick=()=>tab("graph");$("tab-map").onclick=()=>tab("map");
+
+// ---------- 3PL table
+[...new Set(TPL.map(t=>t.t))].forEach(t=>$("ftype").add(new Option(t,t)));
+PORTS.forEach(p=>$("fport").add(new Option(p.name,p.id)));
+function nearest(m){let best=null;for(const h of m)for(const p of PORTS){const d=road(METRO[h],p.ll);if(!best||d<best.d)best={d,p,h}}return best}
+function table(){
+  const q=$("q").value.toLowerCase(),ft=$("ftype").value,fp=$("fport").value;
+  let rows=TPL.map(t=>({...t,near:nearest(t.m)}));
+  rows=rows.filter(t=>(!q||(t.n+" "+t.m.join(" ")).toLowerCase().includes(q))&&(!ft||t.t===ft));
+  if(fp){const P=PORTS.find(p=>p.id===fp);rows.forEach(t=>t.toPort=Math.min(...t.m.map(h=>road(METRO[h],P.ll))));rows=rows.filter(t=>t.toPort<=250).sort((a,b)=>a.toPort-b.toPort)}
+  $("tbl").innerHTML=`<tr><th>Provider</th><th>Type</th><th>NA warehouse ft² (2025)</th><th>East Coast hub metros</th><th>${fp?"Closest hub to port":"Nearest port"}</th><th>Pricing</th><th></th></tr>`+
+   (rows.length?rows.map(t=>`<tr><td><b>${t.n}</b>${t.note?`<br><span class="note">${t.note}</span>`:""}</td><td><span class="pill">${t.t}</span></td>
+   <td class="n">${t.sf?t.sf.toFixed(1)+"M":"—"}</td><td>${t.m.join(", ")}</td>
+   <td class="n">${fp?`≈${t.toPort} mi`:`${t.near.p.name}<br>≈${t.near.d} mi from ${t.near.h}`}</td><td class="note">Not yet added</td>
+   <td><button class="pick" data-n="${t.n}">Route it</button></td></tr>`).join(""):`<tr><td colspan="7" class="note">No 3PL hubs within about 250 road miles of this port. Try another port or clear the filters.</td></tr>`);
+}
+$("tbl").addEventListener("click",e=>{const b=e.target.closest(".pick");if(!b)return;$("tpl").value=b.dataset.n;render();$("tab-graph").scrollIntoView({behavior:"smooth",block:"start"})});
+["q","ftype","fport"].forEach(id=>$(id).addEventListener("input",table));
+
+$("ports").innerHTML=`<tr><th>Port</th><th>2025 TEU</th><th>YoY</th><th>Notes</th></tr>`+PORTS.map(p=>`<tr><td><b>${p.name}</b></td><td class="n">${p.teu||"—"}</td>
+ <td class="n ${p.yoy==null?"":p.yoy>=0?"up":"down"}">${p.yoy==null?"—":(p.yoy>0?"+":"")+p.yoy+"%"}</td><td class="note">${p.note||""}</td></tr>`).join("");
+
+render();table();
+</script>
