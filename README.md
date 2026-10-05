@@ -5,13 +5,15 @@ A free tool for retailers who import goods into the US East Coast. It answers tw
 1. **Which 3PLs are near which ports?** A searchable index of third-party logistics providers, their East Coast hub locations, and the ports closest to them.
 2. **What's the best way to get a container from the factory to my 3PL or showroom right now?** A route planner that weighs speed, cost and risk, and adjusts for world events, the season, and what other shippers are likely to do.
 
-**Live site:** https://iloveraspberrypi518.github.io/personaluse/port-index/
+**Live site:** https://iloveraspberrypi518.github.io/eastbound-3pl-index/
 
 > **Status:** early prototype. It covers the US East Coast only. Transit times are typical estimates, and costs are a relative index, not real quotes. Check facility locations with each provider before relying on them.
 
 ---
 
 ## What it does today
+
+The site has five tabs: **Route planner**, **Mode advisor**, **3PL index**, **Ports**, and **About & sources**. Each tab has its own link, for example `.../port-index/#advisor`.
 
 ### Shipment journey
 Pick a factory region (Shanghai, Ho Chi Minh City or Mumbai), a 3PL, and a final stop. The final stop can be a showroom or studio, with the option to skip the 3PL entirely. The planner compares every path and highlights the best route plus two alternatives:

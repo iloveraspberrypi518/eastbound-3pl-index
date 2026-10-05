@@ -76,6 +76,12 @@ details summary{cursor:pointer;font:600 14px var(--display)}
 .rates label{display:grid;gap:3px}
 .rates input{width:90px;font:13px var(--mono);padding:5px 6px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
 input[type=number]{font:14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);width:110px}
+.topnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:4px;overflow-x:auto;background:var(--paper);border-bottom:1px solid var(--line);padding-top:6px;margin-top:-18px}
+.topnav button{font:600 14px var(--body);background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:10px 14px;cursor:pointer;white-space:nowrap}
+.topnav button:hover{color:var(--ink)}
+.topnav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.scenario-line{margin:-18px 0 0;font-size:13px;color:var(--muted)}
+.scenario-line a{color:var(--accent);cursor:pointer}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th{text-align:left;font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 10px;white-space:nowrap}
 td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
@@ -91,12 +97,22 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 
 <div class="wrap">
 <header>
-  <div class="lbl">East Coast prototype · v0.3 · news as of Oct 5, 2026</div>
+  <div class="lbl">East Coast prototype · v0.4 · news as of Oct 5, 2026</div>
   <h1>Eastbound 3PL Index</h1>
   <p class="sub">Find 3PLs near East Coast ports, then trace a shipment from the factory to a 3PL or straight to your showroom. Routes react to world events, the season, and what other shippers are likely to do.</p>
 </header>
 
-<section>
+<nav class="topnav" role="tablist" aria-label="Sections">
+  <button role="tab" data-go="planner">Route planner</button>
+  <button role="tab" data-go="advisor">Mode advisor</button>
+  <button role="tab" data-go="index">3PL index</button>
+  <button role="tab" data-go="ports">Ports</button>
+  <button role="tab" data-go="about">About &amp; sources</button>
+</nav>
+
+<p class="scenario-line tabpanel" data-tab="advisor" id="scen-line"></p>
+
+<section class="tabpanel" data-tab="planner">
   <h2>Shipment journey</h2>
   <p class="note">Transit days are typical estimates. Cost is a relative index (100 = ocean freight via Panama) until real quotes are added.</p>
   <div class="panel">
@@ -127,7 +143,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
   </div>
 </section>
 
-<section>
+<section class="tabpanel" data-tab="planner">
   <h2>Crowd effect</h2>
   <p class="note">Other retailers on your lane read the same news. If most of them pile into the same port or canal, it congests and slows down. This model shows where the crowd ends up once nobody can do better by switching (an equilibrium), and your best move given that.</p>
   <div class="panel">
@@ -144,9 +160,9 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
   </div>
 </section>
 
-<section>
+<section class="tabpanel" data-tab="advisor">
   <h2>Mode advisor</h2>
-  <p class="note">Should this shipment fly or sail, and in what kind of container? The advisor compares total logistics cost per kg: freight, plus the cost of inventory sitting in transit. Modes that miss your deadline or the product's shelf life are ruled out. It uses the factory region, destination and scenarios set above.</p>
+  <p class="note">Should this shipment fly or sail, and in what kind of container? The advisor compares total logistics cost per kg: freight, plus the cost of inventory sitting in transit. Modes that miss your deadline or the product's shelf life are ruled out.</p>
   <div class="panel">
     <div class="controls">
       <label><span class="lbl">Sector</span><select id="sec"></select></label>
@@ -175,7 +191,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
   </div>
 </section>
 
-<section>
+<section class="tabpanel" data-tab="index">
   <h2>3PL index</h2>
   <p class="note">Hub metros are representative East Coast locations drawn from public information. Confirm facility addresses before requesting quotes. Distance is an estimate: straight-line × 1.2.</p>
   <div class="panel">
@@ -188,14 +204,25 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
   </div>
 </section>
 
-<section>
+<section class="tabpanel" data-tab="ports">
   <h2>East Coast ports</h2>
   <div class="panel scroll"><table id="ports"></table></div>
   <p class="note">A dash means no verified 2025 figure yet.</p>
 </section>
 
-<section class="src">
-  <h2>Sources</h2>
+<section class="tabpanel src" data-tab="about">
+  <h2>About</h2>
+  <div class="panel">
+    <p class="note" style="max-width:70ch">Eastbound 3PL Index helps retailers that import into the US East Coast choose a route, a shipping mode and a 3PL. It's an early prototype. Transit times are typical estimates, route costs are a relative index, and mode-advisor rates are illustrative until real quotes are added.</p>
+    <div><h3>How to use it</h3>
+    <ol class="flags" style="margin-top:6px">
+      <li><b>Route planner:</b> choose a factory region, 3PL, final stop and ship month. Switch news and weather scenarios on or off. The best route and two alternatives are highlighted on the graph and the map. The crowd-effect panel shows how other shippers' choices change your best route.</li>
+      <li><b>Mode advisor:</b> choose a sector, weight, value and deadline to see whether air, a shared container or a full container is cheapest. It uses the route planner's scenario.</li>
+      <li><b>3PL index:</b> filter providers by type or port. Use "Route it" to send one to the route planner.</li>
+      <li><b>Ports:</b> 2025 volumes for East Coast ports.</li>
+    </ol></div>
+  </div>
+  <h2 style="margin-top:12px">Sources</h2>
   <ul>
     <li><a href="https://www.kbcadvisors.com/insights/h2-2025-top-us-container-report">KBC Advisors, H2 2025 Top US Container Report</a>: 2025 port volumes and YoY change</li>
     <li><a href="https://www.3plogistics.com/3pl-market-info-resources/3pl-market-information/aas-top-25-north-american-warehousing-3pls-list/">Armstrong &amp; Associates, Top North American Warehousing 3PLs</a>: warehouse square footage</li>
@@ -479,7 +506,7 @@ function drawCrowd({S,eq,naive,crowded}){
 function render(){
   const R=solve();
   $("routes").innerHTML=R.top.map((p,i)=>card(p,i,["Best match","Alternative","Alternative"][i])).join("");
-  drawGraph(R);drawCrowd(R);drawMode(R);if(!$("view-map").hidden)drawMaps(R);
+  drawGraph(R);drawCrowd(R);drawMode(R);scenLine(R);if(!$("view-map").hidden)drawMaps(R);
   window.__last=R;
 }
 ["origin","tpl","dest","wt","wr","crowdOn","crowd","crowdPref"].forEach(id=>$(id).addEventListener("input",render));
@@ -579,11 +606,24 @@ function table(){
    <td class="n">${fp?`≈${t.toPort} mi`:`${t.near.p.name}<br>≈${t.near.d} mi from ${t.near.h}`}</td><td class="note">Not yet added</td>
    <td><button class="pick" data-n="${t.n}">Route it</button></td></tr>`).join(""):`<tr><td colspan="7" class="note">No 3PL hubs within about 250 road miles of this port. Try another port or clear the filters.</td></tr>`);
 }
-$("tbl").addEventListener("click",e=>{const b=e.target.closest(".pick");if(!b)return;$("tpl").value=b.dataset.n;render();$("tab-graph").scrollIntoView({behavior:"smooth",block:"start"})});
+$("tbl").addEventListener("click",e=>{const b=e.target.closest(".pick");if(!b)return;$("tpl").value=b.dataset.n;render();showTab("planner")});
 ["q","ftype","fport"].forEach(id=>$(id).addEventListener("input",table));
 
 $("ports").innerHTML=`<tr><th>Port</th><th>2025 TEU</th><th>YoY</th><th>Notes</th></tr>`+PORTS.map(p=>`<tr><td><b>${p.name}</b></td><td class="n">${p.teu||"—"}</td>
  <td class="n ${p.yoy==null?"":p.yoy>=0?"up":"down"}">${p.yoy==null?"—":(p.yoy>0?"+":"")+p.yoy+"%"}</td><td class="note">${p.note||""}</td></tr>`).join("");
 
-render();table();
+// ---------- top-level tabs
+const PANES=["planner","advisor","index","ports","about"];
+function showTab(id){if(!PANES.includes(id))id="planner";
+  document.querySelectorAll(".tabpanel").forEach(s=>s.hidden=s.dataset.tab!==id);
+  document.querySelectorAll(".topnav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.go===id));
+  try{history.replaceState(null,"","#"+id)}catch(e){}
+  if(id==="planner"&&!$("view-map").hidden&&window.__last)drawMaps(window.__last);
+  window.scrollTo(0,0);}
+document.querySelectorAll(".topnav button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));
+function scenLine(R){const on=[...EVENTS,...WEATHER].filter(e=>R.S.e[e.id]||R.S.w[e.id]).map(e=>e.t);
+  $("scen-line").innerHTML=`Using the route planner's scenario: <b>${R.S.o}</b> → <b>${R.S.destName}</b>, ${MONTHS[+$("month").value-1]}. Active: ${on.length?on.join(", "):"none"}. <a id="go-planner">Change scenario</a>`;
+  $("go-planner").onclick=()=>showTab("planner");}
+
+render();table();showTab((location.hash||"#planner").slice(1));
 </script>
