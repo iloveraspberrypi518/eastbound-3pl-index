@@ -75,6 +75,52 @@ Build your own network. Drag factories, origin ports and airports, US ports and 
 
 Sources are listed at the bottom of the page.
 
+### Weekly rate updates
+Every Friday a GitHub Actions job ([`.github/workflows/update-rates.yml`](.github/workflows/update-rates.yml)) reads Drewry's World Container Index (Shanghai → New York and Shanghai → Los Angeles), updates `rates.json`, rebuilds the page, runs the tests and pushes the change. The other lanes (Vietnam and India ocean rates, and air) come from news articles with no stable page to read. When any of them is more than 30 days old, the job opens a GitHub issue labeled `stale-rates`. To update one by hand:
+
+```bash
+cd port-index
+python3 -m pipeline.update_rates --set ocean:vn 9800 --date 2026-10-08 --source "Freightos Baltic Index FBX03" --url https://...
+python3 build.py
+```
+
+---
+
+## Next steps (planned)
+
+The goal: a free planning tool for small businesses moving goods to and from the US East Coast. The Python stays in the data pipeline, so the site remains static and free to host. Each step is its own commit.
+
+### Step 2: Tests for the math, and checks on every push
+- Move the pure calculations (freight quotes, duties, emissions) into `port-index/calc.js`. Duties are already there. The page inlines the file, and Node's built-in test runner tests it (`node --test port-index/tests/`), with no packages to install.
+- Python tests that `build.py` fills every placeholder and that `eastbound.sql` loads into SQLite with the expected row counts.
+- A `test.yml` workflow that runs the Python and Node tests on every push and pull request. It also fails if `index.html` wasn't rebuilt after `template.html` or the data changed.
+
+### Step 3: Upload your orders (new "Orders plan" tab)
+- Paste a CSV or pick a file. It's read in the browser and never uploaded. Columns: `sku, description, hts, origin, units, unit_cost, unit_kg, need_by, mode`, plus optional `production_days`, `unit_m3`, and `mfn_pct`/`cn301_pct`/`s232_pct` overrides. Includes a sample file and a downloadable template.
+- **Landed cost per SKU:** duties come from `tariffs.json`, matched by HTS prefix. Lines from the same country, by the same mode, needed in the same month count as one shipment. Freight is the cheaper of LCL and 40' containers, or air, using the mode advisor's constants. It's split across SKUs by weight, and the MPF (minimum and maximum per entry) is split by value. Lines with no tariff match are flagged.
+- **Order-by dates:** work back from the need-by date through a safety buffer, transit days (from the route planner's current scenario) and production time. Lunar New Year and Tết factory closures are added when production overlaps them (China: about 7 days before to 14 after; Vietnam: 5 before to 9 after; dates for 2026–2030). Orders whose order-by date has already passed are flagged, with a suggestion to consider air.
+- Optional: kg CO₂e per unit for each SKU, once step 4 exists.
+
+### Step 4: Life cycle assessment (Emissions tab)
+A screening estimate of a product's footprint from cradle to grave. It's for planning and internal reporting, not a formal ISO 14040/14044 LCA, and not for marketing claims (FTC Green Guides). `pipeline/build_lca.py` would download the sources below, cache them in `pipeline/.cache/` and write a compact `data/lca.json`, which `validate.py` already knows how to check.
+
+| Stage | Method | Source (all free, checked Oct 2026) |
+|---|---|---|
+| Materials & manufacturing | **By weight (main estimate):** kg of product × kg CO₂e per kg (e.g. Clothing 22.3, Food and drink 3.7, IT electronics 24.9, aluminium 9.1, average rigid plastics 3.4) | UK DESNZ GHG Conversion Factors 2026, "Material use" ([flat file](https://assets.publishing.service.gov.uk/media/6a6c9748862aaf18d9c62ac9/ghg-conversion-factors-2026-flat-format-revised.xlsx)) |
+| | **By spend (cross-check):** factory price × kg CO₂e per 2022 $ by NAICS code. Use the factors *without* margins, because transport is counted separately | US EPA Supply Chain GHG Emission Factors v1.3 ([CSV](https://pasteur.epa.gov/uploads/10.23719/1531143/SupplyChainGHGEmissionFactors_v1.3.0_NAICS_CO2e_USD2022.csv)); convert dollars with CPI-U (2022 avg 292.655, Aug 2026 334.980) from the [BLS API](https://api.bls.gov/publicAPI/v2/timeseries/data/CUUR0000SA0) |
+| Packaging | Cardboard 1.20 and plastic film 2.91 kg CO₂e per kg | DESNZ 2026 (Paper and board: board; Plastics: average plastic film) |
+| Shipping to the US | The route planner's existing door-to-door figure | GLEC Framework (already used) |
+| 3PL warehousing | 5.8 kWh per ft² per year × building area per pallet (editable assumption, about 10 ft²) × US grid 0.352 kg CO₂e per kWh. Electricity only | EIA CBECS 2018 table C14 (warehouse and storage); EPA Emission Factors Hub 2025, Table 6 (eGRID US average) |
+| Delivery to customers | 0.128 kg CO₂e per tonne-km (shared truck) | EPA Emission Factors Hub 2025, Table 8 (medium- and heavy-duty truck, per ton-mile) |
+| End of life | Product and packaging by disposal route (landfill, recycling or incineration, chosen by the user) | EPA Emission Factors Hub 2025, Table 9 (from WARM) |
+
+Notes for the build:
+- **Why weight is the main method:** EPA's spend factors describe US industries, so they badly undercount cheap imports. Apparel is 0.06 kg per $, which gives about 0.2 kg CO₂e for a $3 T-shirt, while the weight method gives about 4.5 kg, in line with published T-shirt LCAs. Show both, and explain the gap.
+- Grid carbon intensity of the factory country (Our World in Data / Ember, 2025, g CO₂ per kWh): China 525, Vietnam 461, India 670, US 384. Show these as context. Don't use them to adjust the factors.
+- Proposed categories, matched by HTS prefix: apparel (61, 62), home textiles (63), seafood (03), spices (09), baked goods (19), semiconductors (8541, 8542), consumer electronics (85), batteries (8506, 8507), steel (72, 73), aluminium (76), plastics (39), toys (95), glass and ceramics (69, 70), paper (48), furniture (94, by spend only) and cosmetics (33, by spend only).
+- Show a stacked bar per product of where its carbon comes from. For most goods, materials and manufacturing far outweigh shipping unless the goods fly. The use phase (e.g. electricity used by electronics) is left out.
+- Add the factors to `eastbound.sql` as new tables.
+
 ---
 
 ## Roadmap
@@ -88,7 +134,7 @@ Sources are listed at the bottom of the page.
 
 ### Pricing
 - [x] Published freight rate benchmarks (Drewry WCI, Freightos FBX/FAX) with dates and sources
-- [ ] Automatic weekly rate updates
+- [x] Automatic weekly rate updates (Drewry WCI; other lanes flagged for manual update when over 30 days old)
 - [ ] Publish the SQL data as a DoltHub database so anyone can query it online
 - [ ] 3PL rate ranges: storage per pallet, pick-and-pack, receiving
 - [ ] Anonymous quote sharing, so retailers can report the rates they actually received
@@ -123,6 +169,9 @@ The site lives in [`port-index/`](port-index/):
 | File | What it is |
 | --- | --- |
 | `template.html` | The source. Edit this file. |
+| `calc.js` | Shared calculations (no page code), inlined into the page and tested on their own |
+| `pipeline/` | Python data scripts: `update_rates.py` (freight rates), `validate.py` (data checks run by `build.py`), `xlsx.py` (reads Excel files, standard library only) |
+| `tests/` | Tests. Run them with `cd port-index && python3 -m unittest discover -s tests` |
 | `build.py` | Merges in the data and writes the finished pages and the SQL export |
 | `index.html` | Generated page for GitHub Pages. Don't edit by hand. |
 | `data/` | Rate and tariff data (`rates.json`, `tariffs.json`, generated `eastbound.sql`) and map outlines |
