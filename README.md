@@ -13,7 +13,7 @@ A free tool for retailers who import goods into the US East Coast. It answers tw
 
 ## What it does today
 
-The site has eight tabs: **Route planner**, **Mode advisor**, **Tariffs & duties**, **Emissions**, **Scenario builder**, **3PL index**, **Ports**, and **About & sources**. Each tab has its own link, for example `.../port-index/#advisor`.
+The site has nine tabs: **Route planner**, **Mode advisor**, **When to book**, **Tariffs & duties**, **Emissions**, **Scenario builder**, **3PL index**, **Ports**, and **About & sources**. Each tab has its own link, for example `.../port-index/#advisor`.
 
 ### Shipment journey
 Pick a factory region (Shanghai, Ho Chi Minh City or Mumbai), a 3PL, and a final stop. The final stop can be a showroom or studio, with the option to skip the 3PL entirely. The planner compares every path and highlights the best route plus two alternatives:
@@ -42,6 +42,14 @@ Should a shipment fly or sail, and in what kind of container? Pick a sector, shi
 - compliance reminders for each sector, such as FDA Prior Notice, ITAR/EAR, the Cargo Preference Act, and dangerous-goods rules
 
 Rates are illustrative and editable. Current-event scenarios scale them up or down.
+
+### When to book (booking-timing game)
+When a deadline is coming (a tariff increase, Lunar New Year factory closures, or holiday stock that must be in the warehouse), every importer on the lane tries to sail before it, and rates climb as the last sailings fill up. Sailing early isn't free either, because the goods sit in a warehouse. The tab models this as a booking-timing game (a weekly version of Vickrey's bottleneck model):
+- **Where the crowd books:** the equilibrium spread of bookings over the 10 sailings before the deadline and 3 after it, where nobody can save by switching weeks.
+- **Your move:** your cheapest sailing given your own cargo value and the cost of missing the deadline, with booking dates. Cargo that's cheap to hold should sail ahead of the rush; expensive cargo should pay the rush premium. If rush rates cost more than the penalty, it's cheaper to wait.
+- **Price of anarchy:** how much less the lane would pay per container if bookings were coordinated, and what share of cargo coordination would push past the deadline.
+
+It uses the route planner's scenario (for transit time and rate adjustments) and the Mode advisor's 40' rate.
 
 ### Tariffs & duties
 Compare the landed cost of a shipment from China, Vietnam or India. The tab stacks the base (MFN) duty, Section 301 China list duties, the July 2026 Section 301 forced-labor duties (10% or 12.5%), Section 232 metals duties, and customs fees (MPF and HMF). It then adds freight at today's published rates. Example products cover apparel, food and defense-related materials, and every rate can be edited.
@@ -91,7 +99,7 @@ python3 build.py
 The goal: a free planning tool for small businesses moving goods to and from the US East Coast. The Python stays in the data pipeline, so the site remains static and free to host. Each step is its own commit.
 
 ### Step 2: Tests for the math, and checks on every push
-- Move the pure calculations (freight quotes, duties, emissions) into `port-index/calc.js`. Duties are already there. The page inlines the file, and Node's built-in test runner tests it (`node --test port-index/tests/`), with no packages to install.
+- Move the pure calculations (freight quotes, duties, emissions) into `port-index/calc.js`. Duties and the booking-timing game are already there, with tests in `tests/calc.test.js`. The page inlines the file, and Node's built-in test runner tests it (`node --test "port-index/tests/*.test.js"`), with no packages to install.
 - Python tests that `build.py` fills every placeholder and that `eastbound.sql` loads into SQLite with the expected row counts.
 - A `test.yml` workflow that runs the Python and Node tests on every push and pull request. It also fails if `index.html` wasn't rebuilt after `template.html` or the data changed.
 
@@ -184,9 +192,9 @@ The site lives in [`port-index/`](port-index/):
 | File | What it is |
 | --- | --- |
 | `template.html` | The source. Edit this file. |
-| `calc.js` | Shared calculations (no page code), inlined into the page and tested on their own |
+| `calc.js` | Shared calculations (no page code), inlined into the page and tested on their own: duties and the booking-timing game |
 | `pipeline/` | Python data scripts: `update_rates.py` (freight rates), `validate.py` (data checks run by `build.py`), `xlsx.py` (reads Excel files, standard library only) |
-| `tests/` | Tests. Run them with `cd port-index && python3 -m unittest discover -s tests` |
+| `tests/` | Tests. Run them with `cd port-index && python3 -m unittest discover -s tests && node --test "tests/*.test.js"` |
 | `build.py` | Merges in the data and writes the finished pages and the SQL export |
 | `index.html` | Generated page for GitHub Pages. Don't edit by hand. |
 | `data/` | Rate and tariff data (`rates.json`, `tariffs.json`, generated `eastbound.sql`) and map outlines |

@@ -87,7 +87,7 @@ details summary{cursor:pointer;font:600 14px var(--display)}
 .rates{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:10px}
 .rates label{display:grid;gap:3px}
 .rates input{width:90px;font:13px var(--mono);padding:5px 6px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
-input[type=number]{font:14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);width:110px}
+input[type=number],input[type=date]{font:14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);width:110px}
 .appbar{background:var(--bar);color:var(--bar-ink);margin:0 -16px;padding:0 16px;position:sticky;top:env(safe-area-inset-top,0px);z-index:10}
 .appbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;padding-top:12px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:10px}
@@ -153,6 +153,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
   <nav class="topnav" role="tablist" aria-label="Sections">
     <button role="tab" data-go="planner">Route planner</button>
     <button role="tab" data-go="advisor">Mode advisor</button>
+    <button role="tab" data-go="timing">When to book</button>
     <button role="tab" data-go="duties">Tariffs &amp; duties</button>
     <button role="tab" data-go="emissions">Emissions</button>
     <button role="tab" data-go="builder">Scenario builder</button>
@@ -163,7 +164,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 </div>
 <div class="wrap">
 
-<p class="scenario-line tabpanel" data-tab="advisor duties emissions builder" id="scen-line"></p>
+<p class="scenario-line tabpanel" data-tab="advisor timing duties emissions builder" id="scen-line"></p>
 
 <section class="tabpanel" data-tab="planner">
   <h2>Shipment journey</h2>
@@ -243,6 +244,40 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
       <p class="note">Scenario adjustment versus today's market: <span id="mult" class="nums"></span>. Edit any rate to use your own quote.</p>
       <div class="rates" id="rates"></div>
     </details>
+  </div>
+</section>
+
+<section class="tabpanel" data-tab="timing">
+  <h2>When to book</h2>
+  <p class="note">When a deadline is coming (a tariff increase, Lunar New Year factory closures, holiday stock), every importer on your lane tries to sail before it, and rates climb as the last sailings fill up. Sailing early costs money too: the goods sit in a warehouse. This model finds where the crowd's bookings settle once nobody can save by switching weeks (an equilibrium), then picks your cheapest sailing given your own cargo.</p>
+  <div class="panel">
+    <div class="controls">
+      <label><span class="lbl">Deadline</span><select id="tm-type"></select></label>
+      <label><span class="lbl" id="tm-date-lbl">Date</span><input type="date" id="tm-date"></label>
+      <label><span class="lbl">Importers racing it</span><select id="tm-rush"><option value="2">A few</option><option value="4" selected>Many</option><option value="7">A stampede</option></select></label>
+      <label><span class="lbl">Your cargo value per 40' ($)</span><input type="number" id="tm-val" min="1000" step="5000" value="40000"></label>
+      <label><span class="lbl">Cost if you miss it (% of value)</span><input type="number" id="tm-pen" min="0" step="1"></label>
+    </div>
+    <p class="note" id="tm-about"></p>
+    <div class="kpis" id="tm-kpis"></div>
+    <div class="eco">
+      <figure style="margin:0;display:grid;gap:6px">
+        <figcaption><h3>Your cost per 40' container, by sailing</h3><p class="note">Freight at the rate the crowd leaves you, plus holding cost for sailing early, plus the penalty for missing the deadline.</p></figcaption>
+        <div class="scroll"><svg id="tm-cost" viewBox="0 0 640 280" style="width:100%;min-width:540px;height:auto" role="img" aria-label="Stacked bar chart of your cost per container for each sailing week"></svg></div>
+        <div class="legend" id="tm-cost-legend"></div>
+      </figure>
+      <figure style="margin:0;display:grid;gap:6px">
+        <figcaption><h3>Where the crowd books</h3><p class="note">Share of rush bookings per sailing, left alone vs. if bookings were coordinated.</p></figcaption>
+        <svg id="tm-crowd" viewBox="0 0 420 280" style="width:100%;height:auto" role="img" aria-label="Bar chart of the crowd's share of bookings per sailing week"></svg>
+        <div class="legend" id="tm-crowd-legend"></div>
+      </figure>
+    </div>
+    <div class="verdict" id="tm-verdict"></div>
+    <details>
+      <summary>Every sailing in the window</summary>
+      <div class="scroll" style="margin-top:8px"><table id="tm-table"></table></div>
+    </details>
+    <p class="note">Assumptions: an empty week costs today's 40' rate for your origin, adjusted for the current scenario (edit it in the Mode advisor). Rush bookings are counted in weeks of spare capacity on the lane, and a week that's exactly full costs double. Holding cost is 25% a year of cargo value (the usual inventory carrying cost) plus $75 a week of storage. The rest of the crowd is a typical importer with $80,000 of cargo per container. Booking is assumed 2 weeks before sailing. Transit time comes from the route planner's fastest ocean route. Bookings that need goods ready earlier than your factory can deliver aren't ruled out, so check production dates.</p>
   </div>
 </section>
 
@@ -361,6 +396,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
       <li><b>Route planner:</b> choose a factory region, 3PL, final stop and ship month. Switch news and weather scenarios on or off. The best route and two alternatives are highlighted on the graph and the map. The crowd-effect panel shows how other shippers' choices change your best route.</li>
       <li><b>Tariffs &amp; duties:</b> pick a product and shipment value to compare duties, fees, freight and landed cost for China, Vietnam and India.</li>
       <li><b>Mode advisor:</b> choose a sector, weight, value and deadline to see whether air, a shared container or a full container is cheapest. It uses the route planner's scenario.</li>
+      <li><b>When to book:</b> pick a deadline, its date, and your cargo value to see which sailing is cheapest once other importers rush for the same one. It uses the route planner's scenario and the Mode advisor's 40' rate.</li>
       <li><b>3PL index:</b> filter providers by type or port. Use "Route it" to send one to the route planner.</li>
       <li><b>Ports:</b> 2025 volumes for East Coast ports.</li>
     </ol></div>
@@ -417,7 +453,65 @@ function dutyCalc(T, c, V, mode, L) {
   return o;
 }
 
-if (typeof module !== "undefined") module.exports = { dutyCalc };
+// ---------- Booking timing: a discrete version of Vickrey's bottleneck model.
+// Importers racing one deadline each pick a sailing week. A week's freight rate rises with how
+// full it is; sailing early costs holding (inventory carrying + storage); sailing after the
+// deadline costs a one-off penalty (higher tariff, missed season).
+// P = {early, late, base, surge, demand, hold, penalty}
+//   early: sailings that make the deadline (week e = 0 is the last one), late: sailings after it
+//   base: uncongested $/container, surge: rate multiple added when a week is exactly full
+//   demand: lane bookings in weeks of normal capacity, hold: $/container per week early
+//   penalty: $/container for missing the deadline
+// Weeks run earliest first: early-1 … 0 weeks early, then late sailings 1 … late.
+function bookingWeeks(P) {
+  const w = [];
+  for (let e = P.early - 1; e >= 0; e--) w.push({ e, late: 0 });
+  for (let k = 1; k <= P.late; k++) w.push({ e: 0, late: k });
+  return w;
+}
+// Load is in multiples of a week's capacity, so a load of 1 doubles the rate when surge = 1.
+const bookingRate = (P, load) => P.base * (1 + P.surge * load * load);
+// What one shipper pays to sail in week w at the given rate, with their own hold and penalty.
+const bookingCost = (w, rate, hold, penalty) => rate + hold * w.e + (w.late ? penalty : 0);
+
+// Method of successive averages, as in the route planner's crowd model. With system = true it
+// prices each week at its marginal cost to the whole lane instead, which gives the coordinated
+// optimum. The gap between the two average costs is the price of anarchy.
+function bookingEquilibrium(P, system = false, iters = 3000) {
+  const W = bookingWeeks(P);
+  let x = W.map(() => 1 / W.length);
+  const costs = x => W.map((w, i) => {
+    const L = x[i] * P.demand, c = bookingCost(w, bookingRate(P, L), P.hold, P.penalty);
+    return system ? c + 2 * P.base * P.surge * L * L : c;
+  });
+  for (let k = 1; k <= iters; k++) {
+    const c = costs(x), j = c.indexOf(Math.min(...c));
+    x = x.map((v, i) => v + ((i === j ? 1 : 0) - v) / (k + 1));
+  }
+  const rates = x.map(v => bookingRate(P, v * P.demand));
+  const paid = W.map((w, i) => bookingCost(w, rates[i], P.hold, P.penalty));
+  return { weeks: W, share: x, rates, paid, avg: paid.reduce((a, c, i) => a + c * x[i], 0) };
+}
+
+// Price of anarchy for the lane: average cost per container when everyone books for themselves
+// vs. when bookings are coordinated.
+function bookingAnarchy(P) {
+  const eq = bookingEquilibrium(P), opt = bookingEquilibrium(P, true);
+  return { eq, opt, saving: eq.avg - opt.avg, ratio: eq.avg / opt.avg };
+}
+
+// One small shipper's best response to the crowd's rates. Too small to move rates themselves.
+// open[i] = false rules out week i (e.g. its booking date has passed); best is -1 if none is open.
+function bookingBest(eq, hold, penalty, open) {
+  const cost = eq.weeks.map((w, i) => bookingCost(w, eq.rates[i], hold, penalty));
+  let best = -1;
+  cost.forEach((c, i) => { if ((!open || open[i]) && (best < 0 || c < cost[best])) best = i; });
+  return { cost, best };
+}
+
+if (typeof module !== "undefined") module.exports = {
+  dutyCalc, bookingWeeks, bookingRate, bookingCost, bookingEquilibrium, bookingAnarchy, bookingBest,
+};
 </script>
 <script>
 // ---------- data ([lat, lon])
@@ -689,7 +783,7 @@ function drawCrowd({S,eq,naive,crowded}){
 function render(){
   const R=solve();window.__S=R.S;if(ratesOrigin!==R.S.O.c&&!ratesEdited)fillRates(R.S.O.c);
   $("routes").innerHTML=R.top.map((p,i)=>card(p,i,["Best match","Alternative","Alternative"][i])).join("");
-  drawGraph(R);drawCrowd(R);drawMode(R);drawDuties(R);drawEmissions(R);scenLine(R);if(typeof sbRender==="function"&&SB)sbRender();if(!$("view-map").hidden)drawMaps(R);
+  drawGraph(R);drawCrowd(R);drawMode(R);drawTiming(R);drawDuties(R);drawEmissions(R);scenLine(R);if(typeof sbRender==="function"&&SB)sbRender();if(!$("view-map").hidden)drawMaps(R);
   window.__last=R;
 }
 ["origin","tpl","dest","wt","wr","we","crowdOn","crowd","crowdPref"].forEach(id=>$(id).addEventListener("input",render));
@@ -1058,8 +1152,100 @@ function drawDuties(R){if(!R)return;
 $("d-prod").addEventListener("input",()=>{loadProduct(+$("d-prod").value);drawDuties(window.__last)});
 ["d-val","d-units","d-kg","d-mode","d-mfn","d-cn301","d-232"].forEach(id=>$(id).addEventListener("input",()=>drawDuties(window.__last)));
 
+// ---------- when to book (booking-timing game; the math is in calc.js)
+const TIMING={
+ tariff:{t:"A tariff increase takes effect",by:"arrive",date:"2027-04-01",pen:10,lbl:"Higher duty applies from",
+  about:"Example: goods that arrive on or after this date pay a higher duty. Set the date and the increase that applies to your products. The cost of missing it is that increase."},
+ lny:{t:"Lunar New Year factory closures",by:"sail",date:"2027-01-30",pen:6,gap:2,lbl:"Factories close",
+  about:"Factories in China and Vietnam close about a week before Lunar New Year / Tết (Feb 6, 2027) and reopen about two weeks after, so anything that doesn't sail first waits 3 weeks or more. The cost of missing it covers stockouts and emergency air freight while you wait."},
+ holiday:{t:"Holiday stock must be in the warehouse",by:"arrive",date:"2027-10-01",pen:20,lbl:"Must arrive by",
+  about:"Goods that arrive after this date miss the holiday selling season. The cost of missing it is markdowns and lost sales on late stock."}};
+const TM={early:10,late:3,surge:1,crowdVal:80000,carry:.25,store:75},DAY=864e5;
+const tmHold=v=>v*TM.carry/52+TM.store;
+const tmFmt=(t,y)=>new Date(t).toLocaleDateString("en-US",{month:"short",day:"numeric",...(y?{year:"numeric"}:{}),timeZone:"UTC"});
+const tmWeek=(w,gap=0)=>w.late?`+${w.late+gap}w`:w.e?`−${w.e}w`:"Last";
+const tmPct=v=>Math.round(v*100)+"%";
+function tmTicks(max){const p=Math.pow(10,Math.floor(Math.log10(max))),s=max/p>5?p*2:max/p>2?p:p/2,out=[];for(let v=0;v<=max+1e-9;v+=s)out.push(v);return out}
+Object.entries(TIMING).forEach(([k,v])=>$("tm-type").add(new Option(v.t,k)));
+function tmPreset(){const T=TIMING[$("tm-type").value];$("tm-date").value=T.date;$("tm-pen").value=T.pen}
+tmPreset();
+
+function drawTiming(R){
+  if(!R)return;
+  const T=TIMING[$("tm-type").value],X=advCtx(R),base=Math.max(1,rate("f40")*X.oceanX);
+  const transit=Math.min(...R.cands.filter(p=>p.leg!=="Air").map(p=>p.d));
+  const val=Math.max(0,+$("tm-val").value||0),pen=Math.max(0,+$("tm-pen").value||0)/100;
+  const dl=Date.parse(($("tm-date").value||T.date)+"T00:00:00Z"),today=Date.parse(new Date().toISOString().slice(0,10)+"T00:00:00Z");
+  const P={early:TM.early,late:TM.late,base,surge:TM.surge,demand:+$("tm-rush").value,hold:tmHold(TM.crowdVal),penalty:pen*TM.crowdVal};
+  const {eq,opt,saving,ratio}=bookingAnarchy(P);
+  // Late sailings start once the factory reopens (gap = extra weeks closed after the deadline).
+  const last=dl-(T.by==="arrive"?transit:0)*DAY,hold=tmHold(val),gap=T.gap||0,wk=w=>tmWeek(w,gap);
+  const rows=eq.weeks.map((w,i)=>{const sail=last+7*DAY*(w.late?w.late+gap:-w.e),book=sail-14*DAY;
+    return{w,i,sail,book,open:book>=today,fr:eq.rates[i],h:hold*w.e,p:w.late?pen*val:0,share:eq.share[i],opt:opt.share[i]}});
+  const B=bookingBest(eq,hold,pen*val,rows.map(r=>r.open));rows.forEach(r=>r.total=B.cost[r.i]);
+  const best=rows[B.best],lastRow=rows[TM.early-1];
+
+  $("tm-date-lbl").textContent=T.lbl;
+  $("tm-about").textContent=T.about+(T.by==="arrive"?` The last sailing that makes it leaves about ${transit} days before, the route planner's fastest ocean transit.`:"")+
+    (R.S.O.c==="in"&&$("tm-type").value==="lny"?" Indian factories don't close for Lunar New Year, so this mostly applies to China and Vietnam.":"");
+  const kpi=(l,v,s)=>`<div class="kpi"><span class="lbl">${l}</span><span class="v">${v}</span><span class="note">${s}</span></div>`;
+  $("tm-kpis").innerHTML=
+    kpi("Your best sailing",best?tmFmt(best.sail,1):"—",best?`Book by ${tmFmt(best.book,1)} · ${best.w.late?"after the deadline":best.w.e?best.w.e+" weeks before the last sailing":"the last sailing"}`:"Every booking date has passed")+
+    kpi("Your cost per 40'",best?usd(best.total):"—",best&&lastRow.open&&best!==lastRow?`${usd(lastRow.total-best.total)} less than the last sailing`:"Freight, holding and penalty")+
+    kpi("Rush premium on the last sailing","+"+tmPct(lastRow.fr/base-1),`${usd(lastRow.fr)} vs. ${usd(base)} in a quiet week`)+
+    kpi("Lost to booking alone",usd(saving)+"<small> /container</small>",`Price of anarchy ${ratio.toFixed(2)}: the lane's average cost vs. coordinated booking`);
+
+  // verdict
+  const crowdH=tmHold(TM.crowdVal),optLate=rows.filter(r=>r.w.late).reduce((a,r)=>a+r.opt,0);let why;
+  if(!best)why="Every sailing in this window has a booking date in the past. Pick a later date.";
+  else if(best.w.late)why=`Waiting is cheapest: rush rates cost more than missing the deadline (${usd(pen*val)} on your cargo). Sail just after it, when rates drop back to ${usd(best.fr)}.`;
+  else if(Math.abs(hold-crowdH)/crowdH<.1)why=`Your cargo costs about as much to hold as a typical importer's, so every sailing the crowd uses costs you about the same. That's what an equilibrium looks like. Pick the one that fits your production schedule.`;
+  else if(best===lastRow)why=`Your cargo is expensive to hold (${usd(hold)} a week vs. ${usd(crowdH)} for a typical importer), so paying the rush premium on the last sailing beats sitting in a warehouse.`;
+  else why=`Your cargo is cheaper to hold (${usd(hold)} a week vs. ${usd(crowdH)} for a typical importer), so sailing ahead of the rush pays: you skip ${usd(lastRow.fr-best.fr)} of rush premium for ${usd(best.h)} of holding cost.`;
+  $("tm-verdict").innerHTML=`<div class="row" style="border-color:var(--accent)"><span class="lbl">Your move</span><span>${why}</span></div>
+   <div class="row"><span class="lbl">Why the rush happens</span><span>Each importer counts only their own cost, not the rate rise they cause for everyone else on the same ship. If bookings were coordinated, the lane would pay ${usd(saving)} less per container on average${optLate>.01?`, partly by letting ${tmPct(optLate)} of the rush sail after the deadline`:""}.</span></div>`;
+
+  // chart 1: your cost per sailing, stacked
+  const layers=[["fr","Freight","var(--leg1)"],["h","Holding (sailing early)","var(--leg4)"],["p","Missing the deadline","var(--leg2)"]];
+  const n=rows.length;
+  const frame=(svg,W,H,m,max,fmtY,mark)=>{svg.innerHTML="";const bw=(W-m.l-m.r)/n,Y=v=>H-m.b-v/max*(H-m.t-m.b);
+    const lx=m.l+TM.early*bw;svg.append(el("rect",{x:lx,y:m.t,width:W-m.r-lx,height:H-m.t-m.b,fill:"var(--sea)"}));
+    svg.append(el("text",{x:(lx+W-m.r)/2,y:m.t+10,"text-anchor":"middle",class:"small"},"misses it"));
+    for(const v of tmTicks(max)){svg.append(el("line",{x1:m.l,x2:W-m.r,y1:Y(v),y2:Y(v),stroke:"var(--line)"}));
+      svg.append(el("text",{x:m.l-6,y:Y(v)+3,"text-anchor":"end",class:"small"},fmtY(v)))}
+    rows.forEach((r,i)=>svg.append(el("text",{x:m.l+(i+.5)*bw,y:H-m.b+14,"text-anchor":"middle",class:"small",style:mark&&r===best?"fill:var(--ink);font-weight:600":""},wk(r.w))));
+    svg.append(el("text",{x:(m.l+W-m.r)/2,y:H-4,"text-anchor":"middle",class:"small"},"weeks before the last sailing that makes it"));
+    return{bw,Y}};
+  const cs=$("tm-cost"),cm={l:52,r:8,t:16,b:38},cmax=Math.max(...rows.map(r=>r.total))*1.08,{bw,Y}=frame(cs,640,280,cm,cmax,v=>"$"+Math.round(v/1000)+"k",true);
+  rows.forEach((r,i)=>{const x=cm.l+i*bw+3,w=bw-6;let top=Y(0);const g=el("g",{opacity:r.open?1:.35});
+    for(const [k,,col] of layers){const v=r[k];if(v<=0)continue;const h=Math.max(1,Y(0)-Y(v)-2);top-=h;g.append(el("rect",{x,y:top,width:w,height:h,fill:col}));top-=2}
+    if(r===best)g.append(el("text",{x:x+w/2,y:top-4,"text-anchor":"middle",style:"font-weight:600;font-size:11px"},"Best"));
+    const hit=el("rect",{x:cm.l+i*bw,y:cm.t,width:bw,height:280-cm.t-cm.b,fill:"transparent"});
+    hit.append(el("title",{},`Sails ${tmFmt(r.sail,1)}, book by ${tmFmt(r.book,1)}${r.open?"":" (passed)"}\nFreight ${usd(r.fr)} · holding ${usd(r.h)}${r.p?` · missed deadline ${usd(r.p)}`:""}\nYour total ${usd(r.total)}`));
+    g.append(hit);cs.append(g)});
+  $("tm-cost-legend").innerHTML=layers.map(([,l,c])=>`<span><i style="background:${c};height:10px;width:10px"></i>${l}</span>`).join("")+`<span>Faded: booking date has passed</span>`;
+
+  // chart 2: the crowd's bookings, alone vs. coordinated
+  const ks=$("tm-crowd"),km={l:40,r:8,t:16,b:38},kmax=Math.max(...rows.map(r=>Math.max(r.share,r.opt)))*1.15,K=frame(ks,420,280,km,kmax,v=>Math.round(v*100)+"%");
+  rows.forEach((r,i)=>{const x=km.l+i*K.bw+3,w=K.bw-6;
+    if(r.share>.002)ks.append(el("rect",{x,y:K.Y(r.share),width:w,height:K.Y(0)-K.Y(r.share),fill:"var(--accent)"}));
+    ks.append(el("line",{x1:x-1,x2:x+w+1,y1:K.Y(r.opt),y2:K.Y(r.opt),stroke:"var(--alt1)","stroke-width":2.5}));
+    const hit=el("rect",{x:km.l+i*K.bw,y:km.t,width:K.bw,height:280-km.t-km.b,fill:"transparent"});
+    hit.append(el("title",{},`Sails ${tmFmt(r.sail,1)}\nLeft alone: ${tmPct(r.share)} of the rush, rate ${usd(r.fr)}\nCoordinated: ${tmPct(r.opt)}`));ks.append(hit)});
+  $("tm-crowd-legend").innerHTML=`<span><i style="background:var(--accent);height:10px;width:10px"></i>Left alone (equilibrium)</span><span><i style="background:var(--alt1)"></i>Coordinated (lowest total cost)</span>`;
+
+  // table
+  $("tm-table").innerHTML=`<tr><th>Sailing</th><th>Sails</th><th>Book by</th><th>Crowd share</th><th>Rate</th><th>Holding</th><th>Missed deadline</th><th>Your total</th></tr>`+
+    rows.map(r=>{const c=r===best?' class="n best"':r.open?' class="n"':' class="n off"';
+      return`<tr><td${c}>${wk(r.w)}</td><td${c}>${tmFmt(r.sail,1)}</td><td${c}>${tmFmt(r.book,1)}${r.open?"":" (passed)"}</td><td${c}>${tmPct(r.share)}</td><td${c}>${usd(r.fr)}</td><td${c}>${usd(r.h)}</td><td${c}>${r.p?usd(r.p):"—"}</td><td${c}>${usd(r.total)}</td></tr>`}).join("");
+}
+$("tm-type").addEventListener("input",()=>{tmPreset();drawTiming(window.__last)});
+["tm-date","tm-rush","tm-val","tm-pen"].forEach(id=>$(id).addEventListener("input",()=>drawTiming(window.__last)));
+// The 40' rate can be edited in the Mode advisor, so redraw when it changes.
+$("rates").addEventListener("input",()=>drawTiming(window.__last));
+
 // ---------- top-level tabs
-const PANES=["planner","advisor","duties","emissions","builder","index","ports","about"];
+const PANES=["planner","advisor","timing","duties","emissions","builder","index","ports","about"];
 function showTab(id){if(!PANES.includes(id))id="planner";
   document.querySelectorAll(".tabpanel").forEach(s=>s.hidden=!s.dataset.tab.split(" ").includes(id));
   document.querySelectorAll(".topnav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.go===id));
