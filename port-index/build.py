@@ -6,10 +6,20 @@ Writes:
   data/eastbound.sql  public SQL export of the rate and tariff data (SQLite/MySQL/Dolt)
 """
 import json
+import sys
+from datetime import date
 from pathlib import Path
+
+from pipeline import validate
 
 here = Path(__file__).parent
 data = here / "data"
+problems = validate.run()
+for w in problems.warnings:
+    print("warning:", w)
+if problems.errors:
+    sys.exit("Data errors, not building:\n  " + "\n  ".join(problems.errors))
+
 rates = json.loads((data / "rates.json").read_text())
 tariffs = json.loads((data / "tariffs.json").read_text())
 
@@ -18,6 +28,17 @@ body = body.replace("__WORLD__", (data / "world-110m.json").read_text())
 body = body.replace("__US__", (data / "states-10m.json").read_text())
 body = body.replace("__RATES__", json.dumps(rates, ensure_ascii=False))
 body = body.replace("__TARIFFS__", json.dumps(tariffs, ensure_ascii=False))
+body = body.replace("__CALC__", (here / "calc.js").read_text())
+nice = lambda d: date.fromisoformat(d).strftime("%b %-d, %Y")
+body = body.replace("__RATES_ASOF__", nice(rates["as_of"])).replace("__TARIFFS_ASOF__", nice(tariffs["as_of"]))
+# Rate source lines in "About & sources", generated so the weekly rate update keeps them current
+body = body.replace("<!--RATE_SOURCES-->", "\n".join(
+    f'<li><a href="{r["url"]}">{r["source"]}, {nice(r["date"])}</a>: {r["lane"]} '
+    + (f'${r["usd"]:.2f}/kg' if r["unit"] == "per kg" else f'${r["usd"]:,.0f} {r["unit"]}') + "</li>"
+    for r in rates["ocean_fcl40"] + rates["air"]))
+left = [k for k in ("__WORLD__", "__US__", "__RATES__", "__TARIFFS__", "__CALC__", "<!--RATE_SOURCES-->") if k in body]
+if left:
+    sys.exit(f"Placeholders not filled: {left}")
 
 (here / "artifact.html").write_text(body)
 (here / "index.html").write_text(

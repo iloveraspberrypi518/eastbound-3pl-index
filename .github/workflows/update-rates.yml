@@ -1,0 +1,47 @@
+# Weekly freight rate refresh. Drewry publishes its World Container Index on Thursdays.
+name: Update freight rates
+on:
+  schedule:
+    - cron: "0 14 * * 5"   # Fridays 14:00 UTC
+  workflow_dispatch:
+permissions:
+  contents: write
+  issues: write
+  pages: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: port-index
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch Drewry WCI
+        run: python3 -m pipeline.update_rates
+      - name: Rebuild the page
+        run: python3 build.py
+      - name: Test
+        run: python3 -m unittest discover -s tests -v
+      - name: Commit and push if rates changed
+        run: |
+          if git diff --quiet; then echo "No rate changes."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Update freight rates from Drewry WCI"
+          git push
+          # Pushes made by this job may not start a Pages build on their own, so request one.
+          gh api -X POST "repos/$GITHUB_REPOSITORY/pages/builds" || echo "Couldn't request a Pages build; it will deploy on the next push."
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Open an issue for rates that need a manual update
+        run: |
+          if python3 -m pipeline.update_rates --stale > stale.txt; then exit 0; fi
+          gh label create stale-rates --color d93f0b --description "Freight rates older than 30 days" 2>/dev/null || true
+          n=$(gh issue list --label stale-rates --state open --json number -q '.[0].number')
+          if [ -n "$n" ]; then gh issue comment "$n" -F stale.txt
+          else gh issue create --title "Freight rates need a manual update" --label stale-rates -F stale.txt; fi
+        env:
+          GH_TOKEN: ${{ github.token }}

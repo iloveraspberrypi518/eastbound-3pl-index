@@ -142,7 +142,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
       <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="5" width="20" height="12" rx="1.5" fill="var(--signal)"/><path d="M5 8v6M9 8v6M13 8v6M17 8v6" stroke="var(--bar)" stroke-width="1.6"/></svg>
       <b>Eastbound</b><span>3PL &amp; route index · US East Coast</span>
     </div>
-    <span class="asof">Rates and news as of Oct 5, 2026 · prototype</span>
+    <span class="asof">Rates as of __RATES_ASOF__ · tariffs and news as of __TARIFFS_ASOF__ · prototype</span>
   </div>
   <nav class="topnav" role="tablist" aria-label="Sections">
     <button role="tab" data-go="planner">Route planner</button>
@@ -372,10 +372,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
     <li><a href="https://www.smartfreightcentre.org/en/our-programs/global-logistics-emissions-council/">Smart Freight Centre, GLEC Framework v3</a>: default emission intensities by mode</li>
     <li><a href="https://www.weforum.org/stories/2024/03/slow-steaming-emissions-red-sea-trade/">World Economic Forum, why the Red Sea crisis raises CO₂</a>: Cape diversion and speed effects</li>
     <li><a href="https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle">US EPA, emissions of a typical passenger vehicle</a>: 4.6 t CO₂ per year</li>
-    <li><a href="https://www.thedcn.com.au/news/world-container-index-1-october-2026">Drewry World Container Index, Oct 1, 2026</a>: Shanghai → New York $10,428 per 40'</li>
-    <li><a href="https://www.freightos.com/freight-resources/china-us-truce-to-reduce-some-tariffs-and-likely-postpone-port-fees-september-30-2026-update/">Freightos FBX03, Sept 30, 2026</a>: Asia → US East Coast ≈$9,600 per 40'</li>
-    <li><a href="https://skypace.com/ocean-freight/rates/nhava-sheva-(jnpt)-to-new-york">Skypace carrier listing</a>: Nhava Sheva → New York from $12,600 per 40' HC</li>
-    <li><a href="https://www.stattimes.com/air-cargo/global-air-cargo-rates-ease-after-peak-season-freightos-data-shows-1357688">Freightos Air Index</a>: Far East → USA $6.30/kg</li>
+    <!--RATE_SOURCES-->
     <li><a href="https://taxnews.ey.com/news/2026-1607-ustr-finalizes-section-301-forced-labor-tariffs-on-60-economies-additional-tariffs-of-10-percent-or-125-percent-take-effect-24-july-2026">EY, Section 301 forced-labor tariffs</a> and <a href="https://globaltradealert.org/blog/forced-labour-section-301-final-action">Global Trade Alert</a>: 10% / 12.5% duties from Jul 24, 2026</li>
     <li><a href="https://dimerco.com/us-tariff-update-2026/">Dimerco, US Tariff Update 2026</a>: Section 232 and the wider tariff picture</li>
     <li><a href="https://borderless.us/guides/mpf-changes-october-1-2026">Borderless, MPF changes Oct 1, 2026</a>: FY2027 fee limits</li>
@@ -391,6 +388,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 <script type="application/json" id="us-data">__US__</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>__CALC__</script>
 <script>
 // ---------- data ([lat, lon])
 const METRO={
@@ -993,9 +991,7 @@ const DLAYERS=[["mfn","Base duty (MFN)","var(--leg1)"],["cn301","Section 301 (Ch
 function loadProduct(i){const p=TARIFFS.products[i];$("d-prod").value=i;$("d-mfn").value=p.mfn;$("d-cn301").value=p.cn301;$("d-232").value=p.s232;
   $("d-note").textContent=(p.adcvd?"Antidumping duties may apply. ":"")+p.note}
 loadProduct(0);
-function dutyFor(c,V,mode,L){const F=TARIFFS.fees,s232=L.s232>0;
-  const o={mfn:V*L.mfn/100,cn301:c==="cn"?V*L.cn301/100:0,fl301:s232?0:V*TARIFFS.countries[c].forced_labor_301/100,s232:V*L.s232/100};
-  o.fees=Math.min(F.mpf_max,Math.max(F.mpf_min,V*F.mpf_rate/100))+(mode==="ocean"?V*F.hmf_rate/100:0);return o}
+const dutyFor=(c,V,mode,L)=>dutyCalc(TARIFFS,c,V,mode,L);
 function freightFor(c,kg,mode,X){if(mode==="air")return kg*rate("air")*X.airX;
   const r=c===ratesOrigin?rate("f40"):ratesFor(c).f40;return Math.max(1,Math.ceil(kg/26000))*r*X.oceanX}
 function drawDuties(R){if(!R)return;
