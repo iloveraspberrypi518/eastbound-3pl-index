@@ -364,10 +364,12 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 
 <section class="tabpanel" data-tab="index">
   <h2>3PL index</h2>
-  <p class="note">Hub metros are representative East Coast locations drawn from public information. Confirm facility addresses before requesting quotes. Distance is an estimate: straight-line × 1.2.</p>
+  <p class="note">Hub metros are representative East Coast locations drawn from public information (as of __PROVIDERS_ASOF__). "Who they serve" is a rough guide from each company's business model, not confirmed minimums, and no listing is verified with the provider yet. Confirm details before requesting quotes. Distance is an estimate: straight-line × 1.2.</p>
+  <p class="note">Know a small or regional 3PL near an East Coast port? <a href="https://github.com/iloveraspberrypi518/eastbound-3pl-index/issues/new?template=suggest-3pl.yml" style="color:var(--accent)">Suggest it</a> (opens a public GitHub form, free account needed).</p>
   <div class="panel">
     <div class="controls">
       <label><span class="lbl">Search</span><input id="q" type="search" placeholder="Provider or metro"></label>
+      <label><span class="lbl">Who they serve</span><select id="fserve"><option value="small" selected>Small &amp; mid-size brands</option><option value="large">Mostly large shippers</option><option value="">Everyone</option></select></label>
       <label><span class="lbl">Type</span><select id="ftype"><option value="">All types</option></select></label>
       <label><span class="lbl">Near port</span><select id="fport"><option value="">Any port</option></select></label>
     </div>
@@ -420,6 +422,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 
 <script type="application/json" id="rates-data">__RATES__</script>
 <script type="application/json" id="tariffs-data">__TARIFFS__</script>
+<script type="application/json" id="providers-data">__PROVIDERS__</script>
 <script type="application/json" id="world-data">__WORLD__</script>
 <script type="application/json" id="us-data">__US__</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
@@ -427,10 +430,9 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 <script>__CALC__</script>
 <script>
 // ---------- data ([lat, lon])
-const METRO={
- "Central NJ":[40.31,-74.51],"Lehigh Valley PA":[40.60,-75.49],"Baltimore MD":[39.29,-76.61],"Charlotte NC":[35.23,-80.84],
- "Savannah GA":[32.08,-81.09],"Atlanta GA":[33.75,-84.39],"Lakeland FL":[28.04,-81.95],"South Florida":[26.12,-80.14],
- "Sweetwater TN":[35.60,-84.46],"Chattanooga TN":[35.05,-85.31]};
+// 3PL providers and their hub metros come from data/providers.json
+const PROV=JSON.parse(document.getElementById("providers-data").textContent),METRO=PROV.metros;
+const TPL=PROV.providers.map(x=>({n:x.name,t:x.type,sf:x.sqft_m,m:x.metros,note:x.note,serves:x.serves,min:x.min_volume,web:x.website,ok:x.verified}));
 const PORTS=[
  {id:"NYNJ",name:"New York / New Jersey",ll:[40.68,-74.15],teu:"8.9M",yoy:2.3,gw:true},
  {id:"SAV",name:"Savannah",ll:[32.12,-81.14],teu:"5.7M",yoy:2.6,gw:true},
@@ -443,21 +445,6 @@ const PORTS=[
  {id:"PEV",name:"Port Everglades",ll:[26.09,-80.12],teu:null,yoy:null},
  {id:"BOS",name:"Boston",ll:[42.35,-71.03],teu:null,yoy:null}];
 const AIR=[{id:"JFK",name:"JFK (New York)",ll:[40.64,-73.78]},{id:"ATL",name:"ATL (Atlanta)",ll:[33.64,-84.43]},{id:"MIAair",name:"MIA (Miami)",ll:[25.80,-80.29]}];
-const TPL=[
- {n:"DHL Supply Chain",t:"Contract logistics",sf:163.0,m:["Lehigh Valley PA","Central NJ","Atlanta GA","Baltimore MD"]},
- {n:"Ryder",t:"Contract logistics",sf:105.0,m:["Central NJ","Atlanta GA","South Florida"]},
- {n:"GXO",t:"Contract logistics",sf:83.7,m:["Lehigh Valley PA","Central NJ","Atlanta GA"]},
- {n:"NFI",t:"Contract logistics",sf:70.0,m:["Central NJ","Lehigh Valley PA","Savannah GA"]},
- {n:"GEODIS",t:"Contract logistics",sf:50.0,m:["Lehigh Valley PA","Atlanta GA","Charlotte NC"]},
- {n:"Kenco",t:"Contract logistics",sf:45.9,m:["Chattanooga TN","Atlanta GA"]},
- {n:"DSV",t:"Forwarder + warehousing",sf:45.3,m:["Central NJ","Savannah GA","Atlanta GA"]},
- {n:"FedEx Logistics",t:"Contract logistics",sf:38.8,m:["Atlanta GA","Lehigh Valley PA"]},
- {n:"Saddle Creek",t:"Contract logistics",sf:31.0,m:["Lakeland FL","Atlanta GA","Charlotte NC"]},
- {n:"Flexport",t:"Forwarder + warehousing",sf:null,m:["Central NJ","Atlanta GA","Savannah GA"]},
- {n:"ShipBob",t:"E-commerce fulfillment",sf:null,m:["Central NJ","Atlanta GA"]},
- {n:"ShipMonk",t:"E-commerce fulfillment",sf:null,m:["South Florida","Central NJ"]},
- {n:"Red Stag Fulfillment",t:"E-commerce fulfillment",sf:null,m:["Sweetwater TN"],note:"Bulky / heavy items"},
- {n:"Stord",t:"E-commerce fulfillment",sf:null,m:["Atlanta GA","Lehigh Valley PA"]}];
 const DEST={"New York City":[40.75,-73.99],"Washington DC":[38.90,-77.03],"Charlotte NC":[35.22,-80.84],"Atlanta GA":[33.78,-84.38],"Miami FL":[25.79,-80.13]};
 // Port-to-port ocean days to US East Coast by main leg (typical estimates)
 const ORIGINS={
@@ -799,16 +786,16 @@ function nearest(m){let best=null;for(const h of m)for(const p of PORTS){const d
 function table(){
   const q=$("q").value.toLowerCase(),ft=$("ftype").value,fp=$("fport").value;
   let rows=TPL.map(t=>({...t,near:nearest(t.m)}));
-  rows=rows.filter(t=>(!q||(t.n+" "+t.m.join(" ")).toLowerCase().includes(q))&&(!ft||t.t===ft));
+  const fs=$("fserve").value;rows=rows.filter(t=>(!q||(t.n+" "+t.m.join(" ")).toLowerCase().includes(q))&&(!ft||t.t===ft)&&(!fs||t.serves===fs));
   if(fp){const P=PORTS.find(p=>p.id===fp);rows.forEach(t=>t.toPort=Math.min(...t.m.map(h=>road(METRO[h],P.ll))));rows=rows.filter(t=>t.toPort<=250).sort((a,b)=>a.toPort-b.toPort)}
-  $("tbl").innerHTML=`<tr><th>Provider</th><th>Type</th><th>NA warehouse ft² (2025)</th><th>East Coast hub metros</th><th>${fp?"Closest hub to port":"Nearest port"}</th><th>Pricing</th><th></th></tr>`+
-   (rows.length?rows.map(t=>`<tr><td><b>${t.n}</b>${t.note?`<br><span class="note">${t.note}</span>`:""}</td><td><span class="pill">${t.t}</span></td>
-   <td class="n">${t.sf?t.sf.toFixed(1)+"M":"—"}</td><td>${t.m.join(", ")}</td>
-   <td class="n">${fp?`≈${t.toPort} mi`:`${t.near.p.name}<br>≈${t.near.d} mi from ${t.near.h}`}</td><td class="note">Not yet added</td>
-   <td><button class="pick" data-n="${t.n}">Route it</button></td></tr>`).join(""):`<tr><td colspan="7" class="note">No 3PL hubs within about 250 road miles of this port. Try another port or clear the filters.</td></tr>`);
+  $("tbl").innerHTML=`<tr><th>Provider</th><th>Type</th><th>Serves</th><th>East Coast hub metros</th><th>${fp?"Closest hub to port":"Nearest port"}</th><th>Minimum volume</th><th></th></tr>`+
+   (rows.length?rows.map(t=>`<tr><td><b>${t.web?`<a href="${t.web}" style="color:inherit">${t.n}</a>`:t.n}</b>${t.note?`<br><span class="note">${t.note}</span>`:""}<br><span class="tag" style="color:${t.ok?"var(--good)":"var(--muted)"}">${t.ok?"Verified":"Unverified"}</span></td><td><span class="pill">${t.t}</span></td><td style="white-space:nowrap">${t.serves==="small"?"Small &amp; mid-size":"Mostly large"}</td>
+   <td>${t.m.join(", ")}</td>
+   <td class="n">${fp?`≈${t.toPort} mi`:`${t.near.p.name}<br>≈${t.near.d} mi from ${t.near.h}`}</td><td class="note">${t.min||"Ask the provider"}</td>
+   <td><button class="pick" data-n="${t.n}" style="white-space:nowrap">Route it</button></td></tr>`).join(""):`<tr><td colspan="7" class="note">No matching 3PL hubs${fp?" within about 250 road miles of this port":""}. Try another port or clear the filters.</td></tr>`);
 }
 $("tbl").addEventListener("click",e=>{const b=e.target.closest(".pick");if(!b)return;$("tpl").value=b.dataset.n;render();showTab("planner")});
-["q","ftype","fport"].forEach(id=>$(id).addEventListener("input",table));
+["q","fserve","ftype","fport"].forEach(id=>$(id).addEventListener("input",table));
 
 $("ports").innerHTML=`<tr><th>Port</th><th>2025 TEU</th><th>YoY</th><th>Notes</th></tr>`+PORTS.map(p=>`<tr><td><b>${p.name}</b></td><td class="n">${p.teu||"—"}</td>
  <td class="n ${p.yoy==null?"":p.yoy>=0?"up":"down"}">${p.yoy==null?"—":(p.yoy>0?"+":"")+p.yoy+"%"}</td><td class="note">${p.note||""}</td></tr>`).join("");

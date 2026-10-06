@@ -1,0 +1,252 @@
+{
+ "as_of": "2026-10-06",
+ "note": "East Coast hub metros are representative locations from public information. 'serves' is a rough guide from each company's business model (small = takes small and mid-size brands; large = mostly large contract shippers), not confirmed minimums. Nothing is verified with the provider yet.",
+ "metros": {
+  "Central NJ": [
+   40.31,
+   -74.51
+  ],
+  "Lehigh Valley PA": [
+   40.6,
+   -75.49
+  ],
+  "Baltimore MD": [
+   39.29,
+   -76.61
+  ],
+  "Charlotte NC": [
+   35.23,
+   -80.84
+  ],
+  "Savannah GA": [
+   32.08,
+   -81.09
+  ],
+  "Atlanta GA": [
+   33.75,
+   -84.39
+  ],
+  "Lakeland FL": [
+   28.04,
+   -81.95
+  ],
+  "South Florida": [
+   26.12,
+   -80.14
+  ],
+  "Sweetwater TN": [
+   35.6,
+   -84.46
+  ],
+  "Chattanooga TN": [
+   35.05,
+   -85.31
+  ]
+ },
+ "providers": [
+  {
+   "name": "DHL Supply Chain",
+   "type": "Contract logistics",
+   "sqft_m": 163.0,
+   "metros": [
+    "Lehigh Valley PA",
+    "Central NJ",
+    "Atlanta GA",
+    "Baltimore MD"
+   ],
+   "serves": "large",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  },
+  {
+   "name": "Ryder",
+   "type": "Contract logistics",
+   "sqft_m": 105.0,
+   "metros": [
+    "Central NJ",
+    "Atlanta GA",
+    "South Florida"
+   ],
+   "serves": "large",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  },
+  {
+   "name": "GXO",
+   "type": "Contract logistics",
+   "sqft_m": 83.7,
+   "metros": [
+    "Lehigh Valley PA",
+    "Central NJ",
+    "Atlanta GA"
+   ],
+   "serves": "large",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  },
+  {
+   "name": "NFI",
+   "type": "Contract logistics",
+   "sqft_m": 70.0,
+   "metros": [
+    "Central NJ",
+    "Lehigh Valley PA",
+    "Savannah GA"
+   ],
+   "serves": "large",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  },
+  {
+   "name": "GEODIS",
+   "type": "Contract logistics",
+   "sqft_m": 50.0,
+   "metros": [
+    "Lehigh Valley PA",
+    "Atlanta GA",
+    "Charlotte NC"
+   ],
+   "serves": "large",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  },
+  {
+   "name": "Kenco",
+   "type": "Contract logistics",
+   "sqft_m": 45.9,
+   "metros": [
+    "Chattanooga TN",
+    "Atlanta GA"
+   ],
+   "serves": "large",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  },
+  {
+   "name": "DSV",
+   "type": "Forwarder + warehousing",
+   "sqft_m": 45.3,
+   "metros": [
+    "Central NJ",
+    "Savannah GA",
+    "Atlanta GA"
+   ],
+   "serves": "large",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  },
+  {
+   "name": "FedEx Logistics",
+   "type": "Contract logistics",
+   "sqft_m": 38.8,
+   "metros": [
+    "Atlanta GA",
+    "Lehigh Valley PA"
+   ],
+   "serves": "large",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  },
+  {
+   "name": "Saddle Creek",
+   "type": "Contract logistics",
+   "sqft_m": 31.0,
+   "metros": [
+    "Lakeland FL",
+    "Atlanta GA",
+    "Charlotte NC"
+   ],
+   "serves": "large",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  },
+  {
+   "name": "Flexport",
+   "type": "Forwarder + warehousing",
+   "sqft_m": null,
+   "metros": [
+    "Central NJ",
+    "Atlanta GA",
+    "Savannah GA"
+   ],
+   "serves": "small",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  },
+  {
+   "name": "ShipBob",
+   "type": "E-commerce fulfillment",
+   "sqft_m": null,
+   "metros": [
+    "Central NJ",
+    "Atlanta GA"
+   ],
+   "serves": "small",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  },
+  {
+   "name": "ShipMonk",
+   "type": "E-commerce fulfillment",
+   "sqft_m": null,
+   "metros": [
+    "South Florida",
+    "Central NJ"
+   ],
+   "serves": "small",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  },
+  {
+   "name": "Red Stag Fulfillment",
+   "type": "E-commerce fulfillment",
+   "sqft_m": null,
+   "metros": [
+    "Sweetwater TN"
+   ],
+   "serves": "small",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": "Bulky / heavy items"
+  },
+  {
+   "name": "Stord",
+   "type": "E-commerce fulfillment",
+   "sqft_m": null,
+   "metros": [
+    "Atlanta GA",
+    "Lehigh Valley PA"
+   ],
+   "serves": "small",
+   "min_volume": null,
+   "website": null,
+   "verified": false,
+   "note": null
+  }
+ ]
+}

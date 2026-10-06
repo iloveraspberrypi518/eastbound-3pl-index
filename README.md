@@ -58,7 +58,7 @@ Compare the landed cost of a shipment from China, Vietnam or India. The tab stac
 The mode advisor, route planner and duty calculator use dated public benchmarks: Drewry World Container Index, Freightos FBX03, Freightos Air Index, and a published carrier rate for India. Rates for 20' containers, reefers and LCL are estimated from the 40' rate and labeled as estimates.
 
 ### Public SQL data
-All rate and tariff data lives in [`port-index/data/`](port-index/data/): `rates.json`, `tariffs.json`, and a generated SQL export, [`eastbound.sql`](port-index/data/eastbound.sql). The SQL loads into SQLite, MySQL or Dolt:
+All rate, tariff and 3PL provider data lives in [`port-index/data/`](port-index/data/): `rates.json`, `tariffs.json`, `providers.json`, and a generated SQL export, [`eastbound.sql`](port-index/data/eastbound.sql). The SQL loads into SQLite, MySQL or Dolt:
 
 ```bash
 sqlite3 eastbound.db < port-index/data/eastbound.sql
@@ -78,7 +78,7 @@ An **Emissions priority** slider in the route planner lets carbon steer the reco
 Build your own network. Drag factories, origin ports and airports, US ports and airports, 3PL hubs and showrooms onto a canvas, then connect them by dragging from one node to another. Ocean links let you choose Panama, Suez or the Cape. Every complete factory-to-showroom path is scored for days, cost, risk and CO₂e, using the route planner's scenario and priorities, and the best path is highlighted. Scenarios can be saved by name in your browser.
 
 ### 3PL index and ports
-- **3PLs:** 14 providers, including DHL Supply Chain, Ryder, GXO, NFI, GEODIS, Kenco, DSV, Saddle Creek, Flexport, ShipBob, ShipMonk, Red Stag and Stord. The index shows warehouse square footage, East Coast hub cities, and nearest port. You can filter by type or by port.
+- **3PLs:** 14 providers, from large contract logistics firms (DHL Supply Chain, Ryder, GXO and others) to providers that take small brands (Flexport, ShipBob, ShipMonk, Red Stag and Stord). The index shows who each provider serves, East Coast hub cities, nearest port and minimum volume. It opens filtered to providers that take small and mid-size brands, and you can also filter by type or by port. No listing is verified with the provider yet. The list lives in [`port-index/data/providers.json`](port-index/data/providers.json), and anyone can suggest a provider through the **Suggest a 3PL** GitHub issue form.
 - **Ports:** 2025 container volumes and year-over-year change for East Coast ports, where a verified figure exists.
 
 Sources are listed at the bottom of the page.
@@ -133,11 +133,30 @@ Notes for the build:
 
 ## Roadmap
 
+### Connecting small businesses with small 3PLs (the main goal)
+Stage 1, a curated directory on the static site:
+- [x] 3PL list moved into `data/providers.json`, checked on every build and exported to SQL (`providers`, `provider_hubs`)
+- [x] "Who they serve" filter (small and mid-size brands vs. mostly large shippers), minimum volume column, verified/unverified label
+- [x] **Suggest a 3PL** GitHub issue form ([`.github/ISSUE_TEMPLATE/suggest-3pl.yml`](.github/ISSUE_TEMPLATE/suggest-3pl.yml))
+- [ ] Add 20–40 small and regional 3PLs near East Coast ports, each with a website and a source
+- [ ] Record minimums and services (pick and pack, pallet storage, container unloading, cold storage, hazmat, bulky goods) for each provider
+- [ ] Verify listings with providers, then mark them `verified`
+- [ ] "Request an intro" button (decide where requests go first: an email inbox or a form service)
+- [ ] Privacy note for anything that collects business contact details
+
+Stage 2, a hosted database (Supabase / Postgres) once people use stage 1:
+- [ ] Move `providers.json` into Postgres, with row-level security
+- [ ] Provider logins to claim and edit their own listing
+- [ ] Businesses submit their needs (origin, volume, region, services) and get matched with providers
+- [ ] Match businesses that could share a container, with a fair cost split (Shapley value)
+- [ ] Anonymous sharing of quotes actually received
+- [ ] Spam protection on forms, and terms of use
+
+
 ### Coverage
 - [ ] Gulf Coast ports (Houston, New Orleans, Mobile)
 - [ ] West Coast ports (LA/Long Beach, Oakland, Seattle/Tacoma) and rail from the West Coast to inland and East Coast hubs
 - [ ] More factory regions (South China/Shenzhen, Bangladesh, Indonesia, Mexico, Turkey)
-- [ ] More 3PLs, including regional and specialty providers (cold chain, bulky goods, apparel)
 - [ ] Verified facility addresses for every 3PL hub
 
 ### Pricing
@@ -166,7 +185,6 @@ Notes for the build:
 - [ ] Shareable links that save a scenario
 - [ ] Side-by-side comparison of 3PLs
 - [ ] Accounts and saved routes for retailers
-- [ ] A way for 3PLs to claim and update their own listing
 
 ---
 
@@ -197,7 +215,7 @@ The site lives in [`port-index/`](port-index/):
 | `tests/` | Tests. Run them with `cd port-index && python3 -m unittest discover -s tests && node --test "tests/*.test.js"` |
 | `build.py` | Merges in the data and writes the finished pages and the SQL export |
 | `index.html` | Generated page for GitHub Pages. Don't edit by hand. |
-| `data/` | Rate and tariff data (`rates.json`, `tariffs.json`, generated `eastbound.sql`) and map outlines |
+| `data/` | Rate, tariff and 3PL data (`rates.json`, `tariffs.json`, `providers.json`, generated `eastbound.sql`) and map outlines |
 
 To make a change:
 

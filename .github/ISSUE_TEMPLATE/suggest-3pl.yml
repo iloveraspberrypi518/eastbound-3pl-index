@@ -1,0 +1,72 @@
+name: Suggest a 3PL
+description: Add a small or regional 3PL or warehouse near a US East Coast port to the Eastbound 3PL Index.
+title: "Suggest a 3PL: "
+labels: ["provider-suggestion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! This form is public, so please share only public business information, not personal contact details.
+        We'll check the listing before adding it to the index.
+  - type: input
+    id: name
+    attributes:
+      label: Company name
+    validations:
+      required: true
+  - type: input
+    id: website
+    attributes:
+      label: Website
+      placeholder: https://
+    validations:
+      required: true
+  - type: input
+    id: locations
+    attributes:
+      label: Warehouse locations (city, state)
+      placeholder: Savannah GA; Charlotte NC
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - E-commerce fulfillment
+        - Forwarder + warehousing
+        - Contract logistics
+    validations:
+      required: true
+  - type: dropdown
+    id: serves
+    attributes:
+      label: Do they take small businesses?
+      options:
+        - Yes, small and mid-size brands
+        - Mostly large shippers
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: minimum
+    attributes:
+      label: Minimum volume, if known
+      placeholder: e.g. no minimum, or 100 orders a month, or 10 pallets
+  - type: checkboxes
+    id: services
+    attributes:
+      label: Services
+      options:
+        - label: Pick, pack and ship (e-commerce orders)
+        - label: Pallet storage
+        - label: Container unloading (drayage / devanning)
+        - label: Cold storage
+        - label: Hazmat
+        - label: Bulky or oversized goods
+        - label: Customs brokerage or freight forwarding
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: How you know them, what they're good at, a source for the details above.

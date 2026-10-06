@@ -105,6 +105,42 @@ def check_cross(rates, tariffs, p):
         p.err("rates/tariffs", f"ocean rate origins {sorted(ocean)} and tariff countries {sorted(countries)} should match")
 
 
+TYPES = {"Contract logistics", "Forwarder + warehousing", "E-commerce fulfillment"}
+SERVES = {"small", "large"}
+
+
+def check_providers(P, p, today):
+    _date(p, "providers.as_of", P.get("as_of"), today)
+    metros = P.get("metros", {})
+    for k, ll in metros.items():
+        if not (isinstance(ll, list) and len(ll) == 2 and 24 <= ll[0] <= 48 and -92 <= ll[1] <= -66):
+            p.err(f"providers.metros.{k}", f"{ll!r} isn't an East Coast [lat, lon]")
+    names = [x.get("name") for x in P.get("providers", [])]
+    if not names:
+        p.err("providers.providers", "missing or empty")
+    if len(names) != len(set(names)):
+        p.err("providers.providers", "duplicate provider names (the route planner looks providers up by name)")
+    for i, x in enumerate(P.get("providers", [])):
+        w = f"providers.providers[{i}] ({x.get('name', '?')})"
+        if not x.get("name"):
+            p.err(w, "missing name")
+        if x.get("type") not in TYPES:
+            p.err(w, f"type {x.get('type')!r} should be one of {sorted(TYPES)}")
+        if x.get("serves") not in SERVES:
+            p.err(w, f"serves {x.get('serves')!r} should be one of {sorted(SERVES)}")
+        if not x.get("metros"):
+            p.err(w, "needs at least one hub metro")
+        for m in x.get("metros", []):
+            if m not in metros:
+                p.err(w, f"metro {m!r} isn't in providers.metros, so it can't be placed on the map")
+        if x.get("sqft_m") is not None:
+            _num(p, w + ".sqft_m", x["sqft_m"], 0.1, 500)
+        if x.get("website") and not str(x["website"]).startswith("https://"):
+            p.err(w, "website should start with https://")
+        if not isinstance(x.get("verified"), bool):
+            p.err(w, "verified should be true or false")
+
+
 def check_lca(L, p, today):
     _date(p, "lca.built", L.get("built"), today)
     for k, (lo, hi) in {"grid_us_kg_per_kwh": (0.1, 1), "delivery_kg_per_tkm": (0.02, 0.5), "kwh_per_sqft_yr": (1, 50),
@@ -143,6 +179,7 @@ def run(today=None, lca=True):
     check_rates(rates, p, today)
     check_tariffs(tariffs, p, today)
     check_cross(rates, tariffs, p)
+    check_providers(load("providers.json"), p, today)
     if lca and (DATA / "lca.json").exists():
         check_lca(load("lca.json"), p, today)
     return p
