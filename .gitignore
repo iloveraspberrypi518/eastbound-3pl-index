@@ -27,3 +27,9 @@ build/
 # OS
 Thumbs.db
 .DS_Store
+
+# Python
+__pycache__/
+
+# Local copy of the site with its own git repo (not part of this one)
+eastbound-independent/

@@ -162,6 +162,21 @@ Notes for the build:
 
 ---
 
+## Repo layout
+
+```
+.
+├── index.html            redirects the site root to port-index/
+├── port-index/           the site: source, data, pipeline and tests (see below)
+├── .github/workflows/    weekly freight rate update
+├── docs/                 setup guides (VS Code dev container)
+├── .devcontainer/        dev container config
+├── configs/              MCP server list for the AI agents
+├── .skillshare/          custom skills for the AI agents
+├── opencode.json         OpenCode settings (must stay at the root)
+└── CLAUDE.md             dev container tools reference
+```
+
 ## Working on the site
 
 The site lives in [`port-index/`](port-index/):
@@ -195,3 +210,4 @@ This repo runs in a dev container from [calvinw/ai-agentic-tools](https://github
 - `configs/mcp-servers.conf` lists the MCP servers available to the agents. Run `install-mcps.sh` after editing it.
 - `.skillshare/` holds custom skills. Run `sync-skills.sh` after editing them.
 - See [`CLAUDE.md`](CLAUDE.md) for the full list of tools and scripts.
+- To run it locally in VS Code instead, see [`docs/vscode-devcontainer-setup.md`](docs/vscode-devcontainer-setup.md).
